@@ -2,8 +2,11 @@ package com.udacity.nanodegree.nghianja.spotifystreamer;
 
 import android.app.Activity;
 import android.app.FragmentManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -11,7 +14,9 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.Window;
+import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,10 +30,10 @@ import kaaes.spotify.webapi.android.models.Tracks;
  * References:
  * [1] http://stackoverflow.com/questions/15392261/android-pass-dataextras-to-a-fragment
  */
-public class SubActivity extends Activity {
+public class TrackActivity extends Activity {
 
-    private static final String TAG = "SubActivity";
-    private SubActivityFragment subFragment;
+    private static final String TAG = "TrackActivity";
+    private TrackFragment subFragment;
     private String artistId;
 
     @Override
@@ -38,7 +43,7 @@ public class SubActivity extends Activity {
         setContentView(R.layout.activity_sub);
 
         FragmentManager manager = getFragmentManager();
-        subFragment = (SubActivityFragment) manager.findFragmentById(R.id.sub_fragment);
+        subFragment = (TrackFragment) manager.findFragmentById(R.id.sub_fragment);
 
         // Get the Spotify ID from the intent
         Intent intent = getIntent();
@@ -74,6 +79,13 @@ public class SubActivity extends Activity {
         }
     }
 
+    public boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
     public String getCountryCode() {
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         String country = sharedPref.getString(SettingsFragment.KEY_PREF_COUNTRY, "");
@@ -104,18 +116,28 @@ public class SubActivity extends Activity {
         setProgressBarIndeterminateVisibility(false);
     }
 
+    public void toastNoNetwork() {
+        Toast.makeText(this, getResources().getString(R.string.no_network), Toast.LENGTH_SHORT).show();
+    }
+
     private class GetArtistTopTrackTask extends AsyncTask<String, Void, Tracks> {
         @Override
         protected Tracks doInBackground(String... artistIds) {
-            String country = getCountryCode();
-            SpotifyApi api = new SpotifyApi();
-            SpotifyService spotify = api.getService();
             Tracks results = new Tracks();
 
-            Map<String, Object> options = new HashMap<>();
-            options.put("country", country);
-            for (String artistId : artistIds) {
-                results = spotify.getArtistTopTrack(artistId, options);
+            if (isNetworkAvailable()) {
+                String country = getCountryCode();
+                SpotifyApi api = new SpotifyApi();
+                SpotifyService spotify = api.getService();
+
+                Map<String, Object> options = new HashMap<>();
+                options.put("country", country);
+                for (String artistId : artistIds) {
+                    results = spotify.getArtistTopTrack(artistId, options);
+                }
+            } else {
+                results.tracks = new ArrayList<>();
+                toastNoNetwork();
             }
 
             return results;

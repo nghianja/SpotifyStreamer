@@ -1,6 +1,8 @@
 package com.udacity.nanodegree.nghianja.spotifystreamer;
 
 import android.content.Context;
+import android.net.Uri;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,9 +24,11 @@ import kaaes.spotify.webapi.android.models.Track;
  * References:
  * [1] http://www.vogella.com/tutorials/AndroidListView/article.html
  * [2] https://www.airpair.com/android/list-fragment-android-studio
+ * [3] https://github.com/square/picasso/issues/609
  */
 public class TrackArrayAdapter extends ArrayAdapter<Track> {
 
+    private static final String TAG = "TrackArrayAdapter";
     private final Context context;
 
     public TrackArrayAdapter(Context context, List<Track> tracks) {
@@ -56,7 +60,11 @@ public class TrackArrayAdapter extends ArrayAdapter<Track> {
         if (album != null) {
             if (album.images != null && !album.images.isEmpty()) {
                 Image image = album.images.get(0);
-                Picasso.with(context).load(image.url).into(holder.thumbnailView);
+                try {
+                    Picasso.with(context).load(Uri.parse(image.url)).into(holder.thumbnailView);
+                } catch (Exception e) {
+                    Log.e(TAG, e.toString());
+                }
             }
             holder.albumView.setText(album.name);
         }

@@ -24,6 +24,7 @@ import kaaes.spotify.webapi.android.models.Artist;
  * [3] http://stackoverflow.com/questions/15313598/once-for-all-how-to-correctly-save-instance-state-of-fragments-in-back-stack
  * [4] http://inthecheesefactory.com/blog/fragment-state-saving-best-practices/en
  * [5] http://stackoverflow.com/questions/10463560/retaining-list-in-list-fragment-on-orientation-change
+ * [6] http://stackoverflow.com/questions/12503836/how-to-save-custom-arraylist-on-android-screen-rotate
  */
 public class MainActivityFragment extends ListFragment {
 
@@ -46,7 +47,7 @@ public class MainActivityFragment extends ListFragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        setRetainInstance(true);
+        // setRetainInstance(true);
 
         if (savedInstanceState == null) {
             List<Artist> artists = new ArrayList<>();
@@ -68,7 +69,7 @@ public class MainActivityFragment extends ListFragment {
 
         // launch activity to display an artist's top tracks
         Intent intent = new Intent();
-        intent.setClass(getActivity(), SubActivity.class);
+        intent.setClass(getActivity(), TrackActivity.class);
         intent.putExtra("SpotifyId", artist.id);
 
         startActivity(intent);

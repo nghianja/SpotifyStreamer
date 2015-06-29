@@ -19,16 +19,16 @@ import kaaes.spotify.webapi.android.models.Track;
  * [1] http://www.vogella.com/tutorials/AndroidListView/article.html
  * [2] http://stackoverflow.com/questions/15392261/android-pass-dataextras-to-a-fragment
  */
-public class SubActivityFragment extends ListFragment {
+public class TrackFragment extends ListFragment {
 
-    private static final String TAG = "SubActivityFragment";
+    private static final String TAG = "TrackFragment";
     private TrackArrayAdapter adapter;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
      */
-    public SubActivityFragment() {
+    public TrackFragment() {
     }
 
     @Override
@@ -40,7 +40,7 @@ public class SubActivityFragment extends ListFragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        setRetainInstance(true);
+        // setRetainInstance(true);
 
         if (savedInstanceState == null) {
             List<Track> tracks = new ArrayList<>();
@@ -51,7 +51,7 @@ public class SubActivityFragment extends ListFragment {
         }
 
         setListAdapter(adapter);
-        ((SubActivity) getActivity()).getArtistTopTrack();
+        ((TrackActivity) getActivity()).getArtistTopTrack();
     }
 
 }

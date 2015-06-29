@@ -8,6 +8,7 @@
     <string name="subtitle">Top 10 Tracks</string>
     <string name="no_artist">No artists are found</string>
     <string name="no_song">No songs are found</string>
+    <string name="no_network">Network is unavailable!</string>
     <string name="pref_key">pref_country</string>
     <string name="pref_summary">Specify the country code for searching artist\'s top tracks</string>
     <string name="pref_title">Country Code</string>

@@ -5,6 +5,8 @@ import android.app.FragmentManager;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -12,7 +14,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.Window;
 import android.widget.SearchView;
+import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import kaaes.spotify.webapi.android.SpotifyApi;
@@ -103,6 +107,13 @@ public class MainActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
+    public boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
     public void updateAdapter(List<Artist> items) {
         ArtistArrayAdapter adapter = (ArtistArrayAdapter) mainFragment.getListAdapter();
 
@@ -117,15 +128,25 @@ public class MainActivity extends Activity {
         setProgressBarIndeterminateVisibility(false);
     }
 
+    public void toastNoNetwork() {
+        Toast.makeText(this, getResources().getString(R.string.no_network), Toast.LENGTH_SHORT).show();
+    }
+
     private class SearchArtistTask extends AsyncTask<String, Void, ArtistsPager> {
         @Override
         protected ArtistsPager doInBackground(String... queries) {
-            SpotifyApi api = new SpotifyApi();
-            SpotifyService spotify = api.getService();
             ArtistsPager results = new ArtistsPager();
 
-            for (String query : queries) {
-                results = spotify.searchArtists(query);
+            if (isNetworkAvailable()) {
+                SpotifyApi api = new SpotifyApi();
+                SpotifyService spotify = api.getService();
+
+                for (String query : queries) {
+                    results = spotify.searchArtists(query);
+                }
+            } else {
+                results.artists.items = new ArrayList<>();
+                toastNoNetwork();
             }
 
             return results;
