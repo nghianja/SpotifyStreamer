@@ -1,4 +1,4 @@
-package com.udacity.nanodegree.nghianja.spotifystreamer;
+package com.udacity.nanodegree.nghianja.spotifystreamer.adapter;
 
 import android.content.Context;
 import android.net.Uri;
@@ -11,6 +11,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
+import com.udacity.nanodegree.nghianja.spotifystreamer.R;
+import com.udacity.nanodegree.nghianja.spotifystreamer.model.TrackViewHolder;
 
 import java.util.List;
 

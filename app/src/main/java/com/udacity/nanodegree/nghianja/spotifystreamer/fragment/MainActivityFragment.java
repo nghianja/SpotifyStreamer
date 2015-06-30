@@ -1,4 +1,4 @@
-package com.udacity.nanodegree.nghianja.spotifystreamer;
+package com.udacity.nanodegree.nghianja.spotifystreamer.fragment;
 
 import android.app.ListFragment;
 import android.content.Intent;
@@ -8,6 +8,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
+
+import com.udacity.nanodegree.nghianja.spotifystreamer.R;
+import com.udacity.nanodegree.nghianja.spotifystreamer.activity.TrackListActivity;
+import com.udacity.nanodegree.nghianja.spotifystreamer.adapter.ArtistArrayAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -69,7 +73,7 @@ public class MainActivityFragment extends ListFragment {
 
         // launch activity to display an artist's top tracks
         Intent intent = new Intent();
-        intent.setClass(getActivity(), TrackActivity.class);
+        intent.setClass(getActivity(), TrackListActivity.class);
         intent.putExtra("SpotifyId", artist.id);
 
         startActivity(intent);

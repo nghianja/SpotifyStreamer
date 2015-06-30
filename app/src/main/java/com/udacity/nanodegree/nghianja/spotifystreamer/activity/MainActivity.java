@@ -1,4 +1,4 @@
-package com.udacity.nanodegree.nghianja.spotifystreamer;
+package com.udacity.nanodegree.nghianja.spotifystreamer.activity;
 
 import android.app.Activity;
 import android.app.FragmentManager;
@@ -16,6 +16,10 @@ import android.view.Window;
 import android.widget.SearchView;
 import android.widget.Toast;
 
+import com.udacity.nanodegree.nghianja.spotifystreamer.R;
+import com.udacity.nanodegree.nghianja.spotifystreamer.adapter.ArtistArrayAdapter;
+import com.udacity.nanodegree.nghianja.spotifystreamer.fragment.MainActivityFragment;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,6 +27,7 @@ import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Artist;
 import kaaes.spotify.webapi.android.models.ArtistsPager;
+import retrofit.RetrofitError;
 
 /**
  * References:
@@ -132,17 +137,22 @@ public class MainActivity extends Activity {
         Toast.makeText(this, getResources().getString(R.string.no_network), Toast.LENGTH_SHORT).show();
     }
 
+    public void toastConnectionError() {
+        Toast.makeText(this, getResources().getString(R.string.connection_error), Toast.LENGTH_SHORT).show();
+    }
+
     private class SearchArtistTask extends AsyncTask<String, Void, ArtistsPager> {
         @Override
         protected ArtistsPager doInBackground(String... queries) {
             ArtistsPager results = new ArtistsPager();
 
             if (isNetworkAvailable()) {
-                SpotifyApi api = new SpotifyApi();
-                SpotifyService spotify = api.getService();
-
-                for (String query : queries) {
-                    results = spotify.searchArtists(query);
+                try {
+                    SpotifyApi api = new SpotifyApi();
+                    SpotifyService spotify = api.getService();
+                    results = spotify.searchArtists(queries[0]);
+                } catch (RetrofitError ex) {
+                    toastConnectionError();
                 }
             } else {
                 results.artists.items = new ArrayList<>();

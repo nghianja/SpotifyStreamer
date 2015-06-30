@@ -12,7 +12,7 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".MainActivity"
+            android:name=".activity.MainActivity"
             android:configChanges="orientation|screenSize"
             android:label="@string/app_name"
             android:launchMode="singleTop">
@@ -30,12 +30,12 @@
                 android:resource="@xml/searchable" />
         </activity>
         <activity
-            android:name=".TrackActivity"
+            android:name=".activity.TrackListActivity"
             android:configChanges="orientation|screenSize"
             android:label="@string/subtitle"
-            android:parentActivityName=".MainActivity" />
+            android:parentActivityName=".activity.MainActivity" />
         <activity
-            android:name=".SettingsActivity"
+            android:name=".activity.SettingsActivity"
             android:label="@string/title_activity_settings" />
     </application>
 

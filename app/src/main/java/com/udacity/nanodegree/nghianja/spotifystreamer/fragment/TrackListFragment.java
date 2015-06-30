@@ -1,10 +1,14 @@
-package com.udacity.nanodegree.nghianja.spotifystreamer;
+package com.udacity.nanodegree.nghianja.spotifystreamer.fragment;
 
 import android.app.ListFragment;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.udacity.nanodegree.nghianja.spotifystreamer.R;
+import com.udacity.nanodegree.nghianja.spotifystreamer.activity.TrackListActivity;
+import com.udacity.nanodegree.nghianja.spotifystreamer.adapter.TrackArrayAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,16 +23,16 @@ import kaaes.spotify.webapi.android.models.Track;
  * [1] http://www.vogella.com/tutorials/AndroidListView/article.html
  * [2] http://stackoverflow.com/questions/15392261/android-pass-dataextras-to-a-fragment
  */
-public class TrackFragment extends ListFragment {
+public class TrackListFragment extends ListFragment {
 
-    private static final String TAG = "TrackFragment";
+    private static final String TAG = "TrackListFragment";
     private TrackArrayAdapter adapter;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
      */
-    public TrackFragment() {
+    public TrackListFragment() {
     }
 
     @Override
@@ -51,7 +55,7 @@ public class TrackFragment extends ListFragment {
         }
 
         setListAdapter(adapter);
-        ((TrackActivity) getActivity()).getArtistTopTrack();
+        ((TrackListActivity) getActivity()).getArtistTopTrack();
     }
 
 }

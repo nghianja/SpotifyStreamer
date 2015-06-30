@@ -1,4 +1,4 @@
-package com.udacity.nanodegree.nghianja.spotifystreamer;
+package com.udacity.nanodegree.nghianja.spotifystreamer.activity;
 
 import android.app.Activity;
 import android.app.FragmentManager;
@@ -16,6 +16,11 @@ import android.view.MenuItem;
 import android.view.Window;
 import android.widget.Toast;
 
+import com.udacity.nanodegree.nghianja.spotifystreamer.R;
+import com.udacity.nanodegree.nghianja.spotifystreamer.adapter.TrackArrayAdapter;
+import com.udacity.nanodegree.nghianja.spotifystreamer.fragment.SettingsFragment;
+import com.udacity.nanodegree.nghianja.spotifystreamer.fragment.TrackListFragment;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,15 +30,16 @@ import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.Tracks;
+import retrofit.RetrofitError;
 
 /**
  * References:
  * [1] http://stackoverflow.com/questions/15392261/android-pass-dataextras-to-a-fragment
  */
-public class TrackActivity extends Activity {
+public class TrackListActivity extends Activity {
 
-    private static final String TAG = "TrackActivity";
-    private TrackFragment subFragment;
+    private static final String TAG = "TrackListActivity";
+    private TrackListFragment subFragment;
     private String artistId;
 
     @Override
@@ -43,7 +49,7 @@ public class TrackActivity extends Activity {
         setContentView(R.layout.activity_sub);
 
         FragmentManager manager = getFragmentManager();
-        subFragment = (TrackFragment) manager.findFragmentById(R.id.sub_fragment);
+        subFragment = (TrackListFragment) manager.findFragmentById(R.id.sub_fragment);
 
         // Get the Spotify ID from the intent
         Intent intent = getIntent();
@@ -120,20 +126,26 @@ public class TrackActivity extends Activity {
         Toast.makeText(this, getResources().getString(R.string.no_network), Toast.LENGTH_SHORT).show();
     }
 
+    public void toastConnectionError() {
+        Toast.makeText(this, getResources().getString(R.string.connection_error), Toast.LENGTH_SHORT).show();
+    }
+
     private class GetArtistTopTrackTask extends AsyncTask<String, Void, Tracks> {
         @Override
         protected Tracks doInBackground(String... artistIds) {
             Tracks results = new Tracks();
 
             if (isNetworkAvailable()) {
-                String country = getCountryCode();
-                SpotifyApi api = new SpotifyApi();
-                SpotifyService spotify = api.getService();
+                try {
+                    String country = getCountryCode();
+                    SpotifyApi api = new SpotifyApi();
+                    SpotifyService spotify = api.getService();
 
-                Map<String, Object> options = new HashMap<>();
-                options.put("country", country);
-                for (String artistId : artistIds) {
-                    results = spotify.getArtistTopTrack(artistId, options);
+                    Map<String, Object> options = new HashMap<>();
+                    options.put("country", country);
+                    results = spotify.getArtistTopTrack(artistIds[0], options);
+                } catch (RetrofitError ex) {
+                    toastConnectionError();
                 }
             } else {
                 results.tracks = new ArrayList<>();

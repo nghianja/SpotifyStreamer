@@ -1,8 +1,10 @@
-package com.udacity.nanodegree.nghianja.spotifystreamer;
+package com.udacity.nanodegree.nghianja.spotifystreamer.activity;
 
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.MenuItem;
+
+import com.udacity.nanodegree.nghianja.spotifystreamer.fragment.SettingsFragment;
 
 /**
  * References:

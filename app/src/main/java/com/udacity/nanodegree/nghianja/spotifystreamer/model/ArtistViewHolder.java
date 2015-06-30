@@ -1,4 +1,4 @@
-package com.udacity.nanodegree.nghianja.spotifystreamer;
+package com.udacity.nanodegree.nghianja.spotifystreamer.model;
 
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -10,6 +10,6 @@ import android.widget.TextView;
  * [1] https://www.airpair.com/android/list-fragment-android-studio
  */
 public class ArtistViewHolder {
-    ImageView pictView;
-    TextView nameView;
+    public ImageView pictView;
+    public TextView nameView;
 }

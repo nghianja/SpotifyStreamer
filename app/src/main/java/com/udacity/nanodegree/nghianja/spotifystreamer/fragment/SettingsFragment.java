@@ -1,9 +1,11 @@
-package com.udacity.nanodegree.nghianja.spotifystreamer;
+package com.udacity.nanodegree.nghianja.spotifystreamer.fragment;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
+
+import com.udacity.nanodegree.nghianja.spotifystreamer.R;
 
 /**
  * Implementation of PreferenceFragment for specifying the country code setting.
