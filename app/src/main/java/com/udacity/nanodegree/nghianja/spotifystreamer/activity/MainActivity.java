@@ -145,6 +145,7 @@ public class MainActivity extends Activity {
         @Override
         protected ArtistsPager doInBackground(String... queries) {
             ArtistsPager results = new ArtistsPager();
+            results.artists.items = new ArrayList<>();
 
             if (isNetworkAvailable()) {
                 try {
@@ -155,7 +156,6 @@ public class MainActivity extends Activity {
                     toastConnectionError();
                 }
             } else {
-                results.artists.items = new ArrayList<>();
                 toastNoNetwork();
             }
 
