@@ -46,7 +46,7 @@ public class TrackListActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
-        setContentView(R.layout.activity_sub);
+        setContentView(R.layout.activity_track_list);
 
         FragmentManager manager = getFragmentManager();
         subFragment = (TrackListFragment) manager.findFragmentById(R.id.sub_fragment);
@@ -134,16 +134,14 @@ public class TrackListActivity extends Activity {
         @Override
         protected Tracks doInBackground(String... artistIds) {
             Tracks results = new Tracks();
-            results.tracks = new ArrayList<>();
 
             if (isNetworkAvailable()) {
+                String country = getCountryCode();
+                SpotifyApi api = new SpotifyApi();
+                SpotifyService spotify = api.getService();
+                Map<String, Object> options = new HashMap<>();
+                options.put("country", country);
                 try {
-                    String country = getCountryCode();
-                    SpotifyApi api = new SpotifyApi();
-                    SpotifyService spotify = api.getService();
-
-                    Map<String, Object> options = new HashMap<>();
-                    options.put("country", country);
                     results = spotify.getArtistTopTrack(artistIds[0], options);
                 } catch (RetrofitError ex) {
                     toastConnectionError();
@@ -158,7 +156,9 @@ public class TrackListActivity extends Activity {
         @Override
         protected void onPostExecute(Tracks results) {
             Log.i(TAG, "getArtistTopTrack() returned Tracks");
-            updateAdapter(results.tracks);
+            List<Track> items = results.tracks;
+            if (items == null) items = new ArrayList<>();
+            updateAdapter(items);
         }
     }
 

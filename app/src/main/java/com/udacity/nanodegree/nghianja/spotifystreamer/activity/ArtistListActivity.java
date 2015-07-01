@@ -18,7 +18,7 @@ import android.widget.Toast;
 
 import com.udacity.nanodegree.nghianja.spotifystreamer.R;
 import com.udacity.nanodegree.nghianja.spotifystreamer.adapter.ArtistArrayAdapter;
-import com.udacity.nanodegree.nghianja.spotifystreamer.fragment.MainActivityFragment;
+import com.udacity.nanodegree.nghianja.spotifystreamer.fragment.ArtistListFragment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,19 +37,19 @@ import retrofit.RetrofitError;
  * [4] http://stackoverflow.com/questions/25730163/how-to-save-custom-listfragment-state-with-orientation-change
  * [5] http://stackoverflow.com/questions/15313598/once-for-all-how-to-correctly-save-instance-state-of-fragments-in-back-stack
  */
-public class MainActivity extends Activity {
+public class ArtistListActivity extends Activity {
 
-    private static final String TAG = "MainActivity";
-    private MainActivityFragment mainFragment;
+    private static final String TAG = "ArtistListActivity";
+    private ArtistListFragment mainFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_artist_list);
 
         FragmentManager manager = getFragmentManager();
-        mainFragment = (MainActivityFragment) manager.findFragmentById(R.id.main_fragment);
+        mainFragment = (ArtistListFragment) manager.findFragmentById(R.id.main_fragment);
 
         if (getIntent() != null) {
             handleIntent(getIntent());
@@ -145,12 +145,11 @@ public class MainActivity extends Activity {
         @Override
         protected ArtistsPager doInBackground(String... queries) {
             ArtistsPager results = new ArtistsPager();
-            results.artists.items = new ArrayList<>();
 
             if (isNetworkAvailable()) {
+                SpotifyApi api = new SpotifyApi();
+                SpotifyService spotify = api.getService();
                 try {
-                    SpotifyApi api = new SpotifyApi();
-                    SpotifyService spotify = api.getService();
                     results = spotify.searchArtists(queries[0]);
                 } catch (RetrofitError ex) {
                     toastConnectionError();
@@ -165,7 +164,9 @@ public class MainActivity extends Activity {
         @Override
         protected void onPostExecute(ArtistsPager results) {
             Log.i(TAG, "searchArtists() returned ArtistPager");
-            updateAdapter(results.artists.items);
+            List<Artist> items = results.artists.items;
+            if (items == null) items = new ArrayList<>();
+            updateAdapter(items);
         }
     }
 

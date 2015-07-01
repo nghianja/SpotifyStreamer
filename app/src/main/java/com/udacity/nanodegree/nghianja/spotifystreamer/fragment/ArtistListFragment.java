@@ -30,16 +30,16 @@ import kaaes.spotify.webapi.android.models.Artist;
  * [5] http://stackoverflow.com/questions/10463560/retaining-list-in-list-fragment-on-orientation-change
  * [6] http://stackoverflow.com/questions/12503836/how-to-save-custom-arraylist-on-android-screen-rotate
  */
-public class MainActivityFragment extends ListFragment {
+public class ArtistListFragment extends ListFragment {
 
-    private static final String TAG = "MainActivityFragment";
+    private static final String TAG = "ArtistListFragment";
     private ArtistArrayAdapter adapter;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
      */
-    public MainActivityFragment() {
+    public ArtistListFragment() {
     }
 
     @Override
