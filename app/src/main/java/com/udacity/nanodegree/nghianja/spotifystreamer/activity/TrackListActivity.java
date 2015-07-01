@@ -39,7 +39,7 @@ import retrofit.RetrofitError;
 public class TrackListActivity extends Activity {
 
     private static final String TAG = "TrackListActivity";
-    private TrackListFragment subFragment;
+    private TrackListFragment trackFragment;
     private String artistId;
 
     @Override
@@ -49,7 +49,7 @@ public class TrackListActivity extends Activity {
         setContentView(R.layout.activity_track_list);
 
         FragmentManager manager = getFragmentManager();
-        subFragment = (TrackListFragment) manager.findFragmentById(R.id.sub_fragment);
+        trackFragment = (TrackListFragment) manager.findFragmentById(R.id.track_fragment);
 
         // Get the Spotify ID from the intent
         Intent intent = getIntent();
@@ -109,7 +109,7 @@ public class TrackListActivity extends Activity {
     }
 
     public void updateAdapter(List<Track> items) {
-        TrackArrayAdapter adapter = (TrackArrayAdapter) subFragment.getListAdapter();
+        TrackArrayAdapter adapter = (TrackArrayAdapter) trackFragment.getListAdapter();
 
         if (adapter == null) {
             Log.w(TAG, "adapter should not be null");

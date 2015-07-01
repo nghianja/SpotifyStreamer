@@ -40,7 +40,7 @@ import retrofit.RetrofitError;
 public class ArtistListActivity extends Activity {
 
     private static final String TAG = "ArtistListActivity";
-    private ArtistListFragment mainFragment;
+    private ArtistListFragment artistFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,7 +49,7 @@ public class ArtistListActivity extends Activity {
         setContentView(R.layout.activity_artist_list);
 
         FragmentManager manager = getFragmentManager();
-        mainFragment = (ArtistListFragment) manager.findFragmentById(R.id.main_fragment);
+        artistFragment = (ArtistListFragment) manager.findFragmentById(R.id.artist_fragment);
 
         if (getIntent() != null) {
             handleIntent(getIntent());
@@ -120,7 +120,7 @@ public class ArtistListActivity extends Activity {
     }
 
     public void updateAdapter(List<Artist> items) {
-        ArtistArrayAdapter adapter = (ArtistArrayAdapter) mainFragment.getListAdapter();
+        ArtistArrayAdapter adapter = (ArtistArrayAdapter) artistFragment.getListAdapter();
 
         if (adapter == null) {
             Log.w(TAG, "adapter should not be null");
