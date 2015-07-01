@@ -134,6 +134,7 @@ public class TrackListActivity extends Activity {
         @Override
         protected Tracks doInBackground(String... artistIds) {
             Tracks results = new Tracks();
+            results.tracks = new ArrayList<>();
 
             if (isNetworkAvailable()) {
                 try {
@@ -148,7 +149,6 @@ public class TrackListActivity extends Activity {
                     toastConnectionError();
                 }
             } else {
-                results.tracks = new ArrayList<>();
                 toastNoNetwork();
             }
 
