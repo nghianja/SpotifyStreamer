@@ -1,6 +1,8 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
     <fragment xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/artist_fragment"
@@ -9,4 +11,4 @@
         android:layout_height="match_parent"
         tools:layout="@layout/fragment_searchable" />
 
-</FrameLayout>
+</LinearLayout>
