@@ -5,9 +5,6 @@ import android.app.FragmentManager;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -16,18 +13,18 @@ import android.view.Window;
 import android.widget.SearchView;
 import android.widget.Toast;
 
+import com.squareup.otto.Subscribe;
 import com.udacity.nanodegree.nghianja.spotifystreamer.R;
+import com.udacity.nanodegree.nghianja.spotifystreamer.SpotifyStreamerApp;
 import com.udacity.nanodegree.nghianja.spotifystreamer.adapter.ArtistArrayAdapter;
+import com.udacity.nanodegree.nghianja.spotifystreamer.event.SearchArtistEvent;
 import com.udacity.nanodegree.nghianja.spotifystreamer.fragment.ArtistListFragment;
+import com.udacity.nanodegree.nghianja.spotifystreamer.task.SearchArtistTask;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import kaaes.spotify.webapi.android.SpotifyApi;
-import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Artist;
 import kaaes.spotify.webapi.android.models.ArtistsPager;
-import retrofit.RetrofitError;
 
 /**
  * References:
@@ -45,6 +42,8 @@ public class ArtistListActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        SpotifyStreamerApp.bus.register(this);
+
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         setContentView(R.layout.activity_artist_list);
 
@@ -54,6 +53,12 @@ public class ArtistListActivity extends Activity {
         if (getIntent() != null) {
             handleIntent(getIntent());
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        SpotifyStreamerApp.bus.unregister(this);
+        super.onDestroy();
     }
 
     @Override
@@ -69,15 +74,18 @@ public class ArtistListActivity extends Activity {
         // Special processing of the incoming intent only occurs if the if the action specified
         // by the intent is ACTION_SEARCH.
         if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
-            setProgressBarIndeterminateVisibility(true);
-
             // SearchManager.QUERY is the key that a SearchManager will use to send a query string
             // to an Activity.
             String query = intent.getStringExtra(SearchManager.QUERY);
             Log.d(TAG, "query=" + query);
 
-            SearchArtistTask task = new SearchArtistTask();
-            task.execute(query);
+            if (SpotifyStreamerApp.isNetworkAvailable(this)) {
+                setProgressBarIndeterminateVisibility(true);
+                SearchArtistTask task = new SearchArtistTask();
+                task.execute(query);
+            } else {
+                Toast.makeText(this, getResources().getString(R.string.no_network), Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
@@ -112,13 +120,6 @@ public class ArtistListActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
-    public boolean isNetworkAvailable() {
-        ConnectivityManager connectivityManager
-                = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
-        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
-    }
-
     public void updateAdapter(List<Artist> items) {
         ArtistArrayAdapter adapter = (ArtistArrayAdapter) artistFragment.getListAdapter();
 
@@ -129,45 +130,18 @@ public class ArtistListActivity extends Activity {
             adapter.addAll(items);
             adapter.notifyDataSetChanged();
         }
-
-        setProgressBarIndeterminateVisibility(false);
     }
 
-    public void toastNoNetwork() {
-        Toast.makeText(this, getResources().getString(R.string.no_network), Toast.LENGTH_SHORT).show();
-    }
-
-    public void toastConnectionError() {
-        Toast.makeText(this, getResources().getString(R.string.connection_error), Toast.LENGTH_SHORT).show();
-    }
-
-    private class SearchArtistTask extends AsyncTask<String, Void, ArtistsPager> {
-        @Override
-        protected ArtistsPager doInBackground(String... queries) {
-            ArtistsPager results = new ArtistsPager();
-
-            if (isNetworkAvailable()) {
-                SpotifyApi api = new SpotifyApi();
-                SpotifyService spotify = api.getService();
-                try {
-                    results = spotify.searchArtists(queries[0]);
-                } catch (RetrofitError ex) {
-                    toastConnectionError();
-                }
-            } else {
-                toastNoNetwork();
-            }
-
-            return results;
-        }
-
-        @Override
-        protected void onPostExecute(ArtistsPager results) {
-            Log.i(TAG, "searchArtists() returned ArtistPager");
-            List<Artist> items = results.artists.items;
-            if (items == null) items = new ArrayList<>();
+    @Subscribe
+    public void onAsyncTaskExecute(SearchArtistEvent event) {
+        ArtistsPager results = event.getResults();
+        List<Artist> items = results.artists.items;
+        if (items == null) {
+            Toast.makeText(this, getResources().getString(R.string.connection_error), Toast.LENGTH_SHORT).show();
+        } else {
             updateAdapter(items);
         }
+        setProgressBarIndeterminateVisibility(false);
     }
 
 }

@@ -29,10 +29,23 @@ public class TrackListFragment extends ListFragment {
     private TrackArrayAdapter adapter;
 
     /**
-     * Mandatory empty constructor for the fragment manager to instantiate the
-     * fragment (e.g. upon screen orientation changes).
+     * Create a new instance of DetailsFragment, initialized to
+     * show the text at 'index'.
      */
-    public TrackListFragment() {
+    public static TrackListFragment newInstance(int index, String artistId) {
+        TrackListFragment f = new TrackListFragment();
+
+        // Supply index input as an argument.
+        Bundle args = new Bundle();
+        args.putInt("index", index);
+        args.putString("SpotifyId", artistId);
+        f.setArguments(args);
+
+        return f;
+    }
+
+    public int getShownIndex() {
+        return getArguments().getInt("index", 0);
     }
 
     @Override

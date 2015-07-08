@@ -3,9 +3,8 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="action_refresh">Refresh</string>
-    <string name="app_label">Spotify</string>
+    <string name="search_label">Spotify Streamer</string>
     <string name="search_hint">Search artists</string>
-    <string name="subtitle">Top 10 Tracks</string>
     <string name="no_artist">No artists are found</string>
     <string name="no_song">No songs are found</string>
     <string name="no_network">Network is unavailable</string>
@@ -13,5 +12,7 @@
     <string name="pref_key">pref_country</string>
     <string name="pref_summary">Specify the country code for searching artist\'s top tracks</string>
     <string name="pref_title">Country Code</string>
-    <string name="title_activity_settings">SettingsActivity</string>
+    <string name="title_activity_artists">Spotify Artists</string>
+    <string name="title_activity_tracks">Top 10 Tracks</string>
+    <string name="title_activity_settings">Settings</string>
 </resources>

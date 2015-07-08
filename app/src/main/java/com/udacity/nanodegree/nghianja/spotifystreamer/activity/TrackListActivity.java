@@ -5,9 +5,9 @@ import android.app.FragmentManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -16,21 +16,19 @@ import android.view.MenuItem;
 import android.view.Window;
 import android.widget.Toast;
 
+import com.squareup.otto.Subscribe;
 import com.udacity.nanodegree.nghianja.spotifystreamer.R;
+import com.udacity.nanodegree.nghianja.spotifystreamer.SpotifyStreamerApp;
 import com.udacity.nanodegree.nghianja.spotifystreamer.adapter.TrackArrayAdapter;
+import com.udacity.nanodegree.nghianja.spotifystreamer.event.GetArtistTopTrackEvent;
 import com.udacity.nanodegree.nghianja.spotifystreamer.fragment.SettingsFragment;
 import com.udacity.nanodegree.nghianja.spotifystreamer.fragment.TrackListFragment;
+import com.udacity.nanodegree.nghianja.spotifystreamer.task.GetArtistTopTrackTask;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import kaaes.spotify.webapi.android.SpotifyApi;
-import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.Tracks;
-import retrofit.RetrofitError;
 
 /**
  * References:
@@ -45,6 +43,16 @@ public class TrackListActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        SpotifyStreamerApp.bus.register(this);
+
+        if (getResources().getConfiguration().orientation
+                == Configuration.ORIENTATION_LANDSCAPE) {
+            // If the screen is now in landscape mode, we can show the
+            // dialog in-line with the list so we don't need this activity.
+            finish();
+            return;
+        }
+
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         setContentView(R.layout.activity_track_list);
 
@@ -57,6 +65,11 @@ public class TrackListActivity extends Activity {
         Log.d(TAG, "SpotifyId=" + artistId);
     }
 
+    @Override
+    protected void onDestroy() {
+        SpotifyStreamerApp.bus.unregister(this);
+        super.onDestroy();
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -103,9 +116,13 @@ public class TrackListActivity extends Activity {
     }
 
     public void getArtistTopTrack() {
-        setProgressBarIndeterminateVisibility(true);
-        GetArtistTopTrackTask task = new GetArtistTopTrackTask();
-        task.execute(artistId);
+        if (SpotifyStreamerApp.isNetworkAvailable(this)) {
+            setProgressBarIndeterminateVisibility(true);
+            GetArtistTopTrackTask task = new GetArtistTopTrackTask();
+            task.execute(artistId, SpotifyStreamerApp.getCountryCode(this));
+        } else {
+            Toast.makeText(this, getResources().getString(R.string.no_network), Toast.LENGTH_SHORT).show();
+        }
     }
 
     public void updateAdapter(List<Track> items) {
@@ -118,48 +135,18 @@ public class TrackListActivity extends Activity {
             adapter.addAll(items);
             adapter.notifyDataSetChanged();
         }
-
-        setProgressBarIndeterminateVisibility(false);
     }
 
-    public void toastNoNetwork() {
-        Toast.makeText(this, getResources().getString(R.string.no_network), Toast.LENGTH_SHORT).show();
-    }
-
-    public void toastConnectionError() {
-        Toast.makeText(this, getResources().getString(R.string.connection_error), Toast.LENGTH_SHORT).show();
-    }
-
-    private class GetArtistTopTrackTask extends AsyncTask<String, Void, Tracks> {
-        @Override
-        protected Tracks doInBackground(String... artistIds) {
-            Tracks results = new Tracks();
-
-            if (isNetworkAvailable()) {
-                String country = getCountryCode();
-                SpotifyApi api = new SpotifyApi();
-                SpotifyService spotify = api.getService();
-                Map<String, Object> options = new HashMap<>();
-                options.put("country", country);
-                try {
-                    results = spotify.getArtistTopTrack(artistIds[0], options);
-                } catch (RetrofitError ex) {
-                    toastConnectionError();
-                }
-            } else {
-                toastNoNetwork();
-            }
-
-            return results;
-        }
-
-        @Override
-        protected void onPostExecute(Tracks results) {
-            Log.i(TAG, "getArtistTopTrack() returned Tracks");
-            List<Track> items = results.tracks;
-            if (items == null) items = new ArrayList<>();
+    @Subscribe
+    public void onAsyncTaskExecute(GetArtistTopTrackEvent event) {
+        Tracks results = event.getResults();
+        List<Track> items = results.tracks;
+        if (items == null) {
+            Toast.makeText(this, getResources().getString(R.string.connection_error), Toast.LENGTH_SHORT).show();
+        } else {
             updateAdapter(items);
         }
+        setProgressBarIndeterminateVisibility(false);
     }
 
 }

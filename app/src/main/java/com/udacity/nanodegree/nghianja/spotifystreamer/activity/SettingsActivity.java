@@ -12,6 +12,7 @@ import com.udacity.nanodegree.nghianja.spotifystreamer.fragment.SettingsFragment
  * [2] http://stackoverflow.com/questions/19184154/dynamically-set-parent-activity
  */
 public class SettingsActivity extends Activity {
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -29,7 +30,6 @@ public class SettingsActivity extends Activity {
         switch (item.getItemId()) {
             // Respond to the action bar's Up/Home button
             case android.R.id.home:
-//                navigateUpTo(getParentActivityIntent());
                 finish();
                 return true;
         }

@@ -7,6 +7,7 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 
     <application
+        android:name=".SpotifyStreamerApp"
         android:allowBackup="true"
         android:icon="@mipmap/ic_spotifier"
         android:label="@string/app_name"
@@ -32,7 +33,7 @@
         <activity
             android:name=".activity.TrackListActivity"
             android:configChanges="orientation|screenSize"
-            android:label="@string/subtitle"
+            android:label="@string/title_activity_tracks"
             android:parentActivityName=".activity.ArtistListActivity" />
         <activity
             android:name=".activity.SettingsActivity"
