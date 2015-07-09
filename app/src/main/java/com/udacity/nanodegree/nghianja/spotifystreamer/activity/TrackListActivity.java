@@ -98,23 +98,6 @@ public class TrackListActivity extends Activity {
         }
     }
 
-    public boolean isNetworkAvailable() {
-        ConnectivityManager connectivityManager
-                = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
-        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
-    }
-
-    public String getCountryCode() {
-        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-        String country = sharedPref.getString(SettingsFragment.KEY_PREF_COUNTRY, "");
-        if (country.equals("")) {
-            country = this.getResources().getConfiguration().locale.getCountry();
-        }
-        Log.d(TAG, "country=" + country);
-        return country;
-    }
-
     public void getArtistTopTrack() {
         if (SpotifyStreamerApp.isNetworkAvailable(this)) {
             setProgressBarIndeterminateVisibility(true);
