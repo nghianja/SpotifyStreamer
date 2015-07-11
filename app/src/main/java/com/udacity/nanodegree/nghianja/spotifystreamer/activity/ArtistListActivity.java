@@ -1,7 +1,6 @@
 package com.udacity.nanodegree.nghianja.spotifystreamer.activity;
 
 import android.app.Activity;
-import android.app.FragmentManager;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
@@ -13,18 +12,9 @@ import android.view.Window;
 import android.widget.SearchView;
 import android.widget.Toast;
 
-import com.squareup.otto.Subscribe;
 import com.udacity.nanodegree.nghianja.spotifystreamer.R;
 import com.udacity.nanodegree.nghianja.spotifystreamer.SpotifyStreamerApp;
-import com.udacity.nanodegree.nghianja.spotifystreamer.adapter.ArtistArrayAdapter;
-import com.udacity.nanodegree.nghianja.spotifystreamer.event.SearchArtistEvent;
-import com.udacity.nanodegree.nghianja.spotifystreamer.fragment.ArtistListFragment;
 import com.udacity.nanodegree.nghianja.spotifystreamer.task.SearchArtistTask;
-
-import java.util.List;
-
-import kaaes.spotify.webapi.android.models.Artist;
-import kaaes.spotify.webapi.android.models.ArtistsPager;
 
 /**
  * References:
@@ -37,28 +27,17 @@ import kaaes.spotify.webapi.android.models.ArtistsPager;
 public class ArtistListActivity extends Activity {
 
     private static final String TAG = "ArtistListActivity";
-    private ArtistListFragment artistFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        SpotifyStreamerApp.bus.register(this);
 
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         setContentView(R.layout.activity_artist_list);
 
-        FragmentManager manager = getFragmentManager();
-        artistFragment = (ArtistListFragment) manager.findFragmentById(R.id.artist_fragment);
-
         if (getIntent() != null) {
             handleIntent(getIntent());
         }
-    }
-
-    @Override
-    protected void onDestroy() {
-        SpotifyStreamerApp.bus.unregister(this);
-        super.onDestroy();
     }
 
     @Override
@@ -118,30 +97,6 @@ public class ArtistListActivity extends Activity {
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    public void updateAdapter(List<Artist> items) {
-        ArtistArrayAdapter adapter = (ArtistArrayAdapter) artistFragment.getListAdapter();
-
-        if (adapter == null) {
-            Log.w(TAG, "adapter should not be null");
-        } else {
-            adapter.clear();
-            adapter.addAll(items);
-            adapter.notifyDataSetChanged();
-        }
-    }
-
-    @Subscribe
-    public void onAsyncTaskExecute(SearchArtistEvent event) {
-        ArtistsPager results = event.getResults();
-        List<Artist> items = results.artists.items;
-        if (items == null) {
-            Toast.makeText(this, getResources().getString(R.string.connection_error), Toast.LENGTH_SHORT).show();
-        } else {
-            updateAdapter(items);
-        }
-        setProgressBarIndeterminateVisibility(false);
     }
 
 }

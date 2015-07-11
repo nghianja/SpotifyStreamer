@@ -1,34 +1,16 @@
 package com.udacity.nanodegree.nghianja.spotifystreamer.activity;
 
 import android.app.Activity;
-import android.app.FragmentManager;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.res.Configuration;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.Window;
-import android.widget.Toast;
 
-import com.squareup.otto.Subscribe;
 import com.udacity.nanodegree.nghianja.spotifystreamer.R;
-import com.udacity.nanodegree.nghianja.spotifystreamer.SpotifyStreamerApp;
-import com.udacity.nanodegree.nghianja.spotifystreamer.adapter.TrackArrayAdapter;
-import com.udacity.nanodegree.nghianja.spotifystreamer.event.GetArtistTopTrackEvent;
-import com.udacity.nanodegree.nghianja.spotifystreamer.fragment.SettingsFragment;
 import com.udacity.nanodegree.nghianja.spotifystreamer.fragment.TrackListFragment;
-import com.udacity.nanodegree.nghianja.spotifystreamer.task.GetArtistTopTrackTask;
-
-import java.util.List;
-
-import kaaes.spotify.webapi.android.models.Track;
-import kaaes.spotify.webapi.android.models.Tracks;
 
 /**
  * References:
@@ -43,7 +25,7 @@ public class TrackListActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        SpotifyStreamerApp.bus.register(this);
+        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 
         if (getResources().getConfiguration().orientation
                 == Configuration.ORIENTATION_LANDSCAPE) {
@@ -53,22 +35,17 @@ public class TrackListActivity extends Activity {
             return;
         }
 
-        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
-        setContentView(R.layout.activity_track_list);
-
-        FragmentManager manager = getFragmentManager();
-        trackFragment = (TrackListFragment) manager.findFragmentById(R.id.track_fragment);
-
         // Get the Spotify ID from the intent
         Intent intent = getIntent();
         artistId = intent.getStringExtra("SpotifyId");
         Log.d(TAG, "SpotifyId=" + artistId);
-    }
 
-    @Override
-    protected void onDestroy() {
-        SpotifyStreamerApp.bus.unregister(this);
-        super.onDestroy();
+        if (savedInstanceState == null) {
+            // During initial setup, plug in the details fragment.
+            trackFragment = new TrackListFragment();
+            trackFragment.setArguments(getIntent().getExtras());
+            getFragmentManager().beginTransaction().add(android.R.id.content, trackFragment).commit();
+        }
     }
 
     @Override
@@ -91,45 +68,11 @@ public class TrackListActivity extends Activity {
             startActivity(intent);
             return true;
         } else if (id == R.id.action_refresh) {
-            getArtistTopTrack();
+            trackFragment.getArtistTopTrack(this, artistId);
             return true;
         } else {
             return super.onOptionsItemSelected(item);
         }
-    }
-
-    public void getArtistTopTrack() {
-        if (SpotifyStreamerApp.isNetworkAvailable(this)) {
-            setProgressBarIndeterminateVisibility(true);
-            GetArtistTopTrackTask task = new GetArtistTopTrackTask();
-            task.execute(artistId, SpotifyStreamerApp.getCountryCode(this));
-        } else {
-            Toast.makeText(this, getResources().getString(R.string.no_network), Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    public void updateAdapter(List<Track> items) {
-        TrackArrayAdapter adapter = (TrackArrayAdapter) trackFragment.getListAdapter();
-
-        if (adapter == null) {
-            Log.w(TAG, "adapter should not be null");
-        } else {
-            adapter.clear();
-            adapter.addAll(items);
-            adapter.notifyDataSetChanged();
-        }
-    }
-
-    @Subscribe
-    public void onAsyncTaskExecute(GetArtistTopTrackEvent event) {
-        Tracks results = event.getResults();
-        List<Track> items = results.tracks;
-        if (items == null) {
-            Toast.makeText(this, getResources().getString(R.string.connection_error), Toast.LENGTH_SHORT).show();
-        } else {
-            updateAdapter(items);
-        }
-        setProgressBarIndeterminateVisibility(false);
     }
 
 }

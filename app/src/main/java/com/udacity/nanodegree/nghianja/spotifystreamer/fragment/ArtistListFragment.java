@@ -9,15 +9,20 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
+import android.widget.Toast;
 
+import com.squareup.otto.Subscribe;
 import com.udacity.nanodegree.nghianja.spotifystreamer.R;
+import com.udacity.nanodegree.nghianja.spotifystreamer.SpotifyStreamerApp;
 import com.udacity.nanodegree.nghianja.spotifystreamer.activity.TrackListActivity;
 import com.udacity.nanodegree.nghianja.spotifystreamer.adapter.ArtistArrayAdapter;
+import com.udacity.nanodegree.nghianja.spotifystreamer.event.SearchArtistEvent;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import kaaes.spotify.webapi.android.models.Artist;
+import kaaes.spotify.webapi.android.models.ArtistsPager;
 
 
 /**
@@ -38,11 +43,18 @@ public class ArtistListFragment extends ListFragment {
     private boolean dualPane;
     private int currentPosition = 0;
 
-    /**
-     * Mandatory empty constructor for the fragment manager to instantiate the
-     * fragment (e.g. upon screen orientation changes).
-     */
-    public ArtistListFragment() {
+    // this method is only called once for this fragment
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        // setRetainInstance(true);
+        SpotifyStreamerApp.bus.register(this);
+    }
+
+    @Override
+    public void onDestroy() {
+        SpotifyStreamerApp.bus.unregister(this);
+        super.onDestroy();
     }
 
     @Override
@@ -54,7 +66,6 @@ public class ArtistListFragment extends ListFragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        // setRetainInstance(true);
 
         if (savedInstanceState == null) {
             List<Artist> artists = new ArrayList<>();
@@ -103,27 +114,31 @@ public class ArtistListFragment extends ListFragment {
         currentPosition = index;
         Artist artist = adapter.getItem(index);
 
-        if (artist.id != null && !artist.id.equals("")) {
-            if (dualPane) {
+        if (dualPane) {
+            if (artist.id != null && !artist.id.equals("")) {
                 // We can display everything in-place with fragments, so update
                 // the list to highlight the selected item and show the data.
                 getListView().setItemChecked(index, true);
+            }
 
-                // Check what fragment is currently shown, replace if needed.
-                TrackListFragment tracksFragment = (TrackListFragment)
-                        getFragmentManager().findFragmentById(R.id.tracks);
-                if (tracksFragment == null || tracksFragment.getShownIndex() != index) {
-                    // Make new fragment to show this selection.
-                    tracksFragment = TrackListFragment.newInstance(index, artist.id);
+            // Check what fragment is currently shown, replace if needed.
+            TrackListFragment tracksFragment = (TrackListFragment)
+                    getFragmentManager().findFragmentById(R.id.tracks);
+            if (tracksFragment == null) {
+                // Make new fragment to show this selection.
+                tracksFragment = TrackListFragment.newInstance(index, artist.id);
 
-                    // Execute a transaction, replacing any existing fragment
-                    // with this one inside the frame.
-                    FragmentTransaction ft = getFragmentManager().beginTransaction();
-                    ft.replace(R.id.tracks, tracksFragment);
-                    ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
-                    ft.commit();
-                }
-            } else {
+                // Execute a transaction, replacing any existing fragment
+                // with this one inside the frame.
+                FragmentTransaction ft = getFragmentManager().beginTransaction();
+                ft.replace(R.id.tracks, tracksFragment);
+                ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
+                ft.commit();
+            } else if (tracksFragment.getShownIndex() != index || index == 0) {
+                tracksFragment.getArtistTopTrack(getActivity(), artist.id);
+            }
+        } else {
+            if (artist.id != null && !artist.id.equals("")) {
                 // launch activity to display an artist's top tracks
                 Intent intent = new Intent();
                 intent.setClass(getActivity(), TrackListActivity.class);
@@ -131,9 +146,25 @@ public class ArtistListFragment extends ListFragment {
                 intent.putExtra("SpotifyId", artist.id);
                 startActivity(intent);
             }
-        } else {
-            Log.w(TAG, "Unspecified SpotifyId");
         }
+    }
+
+    public void updateAdapter(List<Artist> items) {
+        adapter.clear();
+        adapter.addAll(items);
+        adapter.notifyDataSetChanged();
+    }
+
+    @Subscribe
+    public void onAsyncTaskExecute(SearchArtistEvent event) {
+        ArtistsPager results = event.getResults();
+        List<Artist> items = results.artists.items;
+        if (items == null) {
+            Toast.makeText(getActivity(), getResources().getString(R.string.connection_error), Toast.LENGTH_SHORT).show();
+        } else {
+            updateAdapter(items);
+        }
+        getActivity().setProgressBarIndeterminateVisibility(false);
     }
 
 }
