@@ -2,7 +2,6 @@ package com.udacity.nanodegree.nghianja.spotifystreamer.adapter;
 
 import android.content.Context;
 import android.net.Uri;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,12 +12,9 @@ import android.widget.TextView;
 import com.squareup.picasso.Picasso;
 import com.udacity.nanodegree.nghianja.spotifystreamer.R;
 import com.udacity.nanodegree.nghianja.spotifystreamer.model.TrackViewHolder;
+import com.udacity.nanodegree.nghianja.spotifystreamer.parcelable.TrackParcelable;
 
 import java.util.List;
-
-import kaaes.spotify.webapi.android.models.AlbumSimple;
-import kaaes.spotify.webapi.android.models.Image;
-import kaaes.spotify.webapi.android.models.Track;
 
 /**
  * A custom adapter for track list view.
@@ -28,12 +24,12 @@ import kaaes.spotify.webapi.android.models.Track;
  * [2] https://www.airpair.com/android/list-fragment-android-studio
  * [3] https://github.com/square/picasso/issues/609
  */
-public class TrackArrayAdapter extends ArrayAdapter<Track> {
+public class TrackArrayAdapter extends ArrayAdapter<TrackParcelable> {
 
     private static final String TAG = "TrackArrayAdapter";
     private final Context context;
 
-    public TrackArrayAdapter(Context context, List<Track> tracks) {
+    public TrackArrayAdapter(Context context, List<TrackParcelable> tracks) {
         super(context, -1, tracks);
         this.context = context;
     }
@@ -42,7 +38,7 @@ public class TrackArrayAdapter extends ArrayAdapter<Track> {
     public View getView(int position, View convertView, ViewGroup parent) {
         View rowView;
         TrackViewHolder holder;
-        Track track = getItem(position);
+        TrackParcelable track = getItem(position);
         LayoutInflater inflater = (LayoutInflater) context
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
@@ -58,20 +54,12 @@ public class TrackArrayAdapter extends ArrayAdapter<Track> {
             holder = (TrackViewHolder) rowView.getTag();
         }
 
-        AlbumSimple album = track.album;
-        if (album != null) {
-            if (album.images != null && !album.images.isEmpty()) {
-                Image image = album.images.get(0);
-                try {
-                    Picasso.with(context).load(Uri.parse(image.url)).into(holder.thumbnailView);
-                } catch (Exception e) {
-                    Log.e(TAG, e.toString());
-                }
-            }
-            holder.albumView.setText(album.name);
+        if (track.getImageSmall() != null) {
+            Picasso.with(context).load(Uri.parse(track.getImageSmall())).into(holder.thumbnailView);
         }
 
-        holder.songView.setText(track.name);
+        holder.songView.setText(track.getTrackName());
+        holder.albumView.setText(track.getAlbumName());
         return rowView;
     }
 

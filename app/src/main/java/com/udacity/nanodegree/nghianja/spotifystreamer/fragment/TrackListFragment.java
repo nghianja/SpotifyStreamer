@@ -15,11 +15,13 @@ import com.udacity.nanodegree.nghianja.spotifystreamer.R;
 import com.udacity.nanodegree.nghianja.spotifystreamer.SpotifyStreamerApp;
 import com.udacity.nanodegree.nghianja.spotifystreamer.adapter.TrackArrayAdapter;
 import com.udacity.nanodegree.nghianja.spotifystreamer.event.GetArtistTopTrackEvent;
+import com.udacity.nanodegree.nghianja.spotifystreamer.parcelable.TrackParcelable;
 import com.udacity.nanodegree.nghianja.spotifystreamer.task.GetArtistTopTrackTask;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import kaaes.spotify.webapi.android.models.Image;
 import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.Tracks;
 
@@ -36,6 +38,7 @@ import kaaes.spotify.webapi.android.models.Tracks;
 public class TrackListFragment extends ListFragment {
 
     private static final String TAG = "TrackListFragment";
+    private ArrayList<TrackParcelable> tracks;
     private TrackArrayAdapter adapter;
 
     /**
@@ -86,16 +89,23 @@ public class TrackListFragment extends ListFragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        if (savedInstanceState == null) {
-            List<Track> tracks = new ArrayList<>();
-            Track track = new Track();
-            track.name = "Waiting to load top tracks...";
+        if (savedInstanceState == null || !savedInstanceState.containsKey("tracks")) {
+            tracks = new ArrayList<>();
+            TrackParcelable track = new TrackParcelable("Waiting to load top tracks...", "", null, null, null);
             tracks.add(track);
-            adapter = new TrackArrayAdapter(getActivity(), tracks);
+        } else {
+            tracks = savedInstanceState.getParcelableArrayList("tracks");
         }
 
+        adapter = new TrackArrayAdapter(getActivity(), tracks);
         setListAdapter(adapter);
         getArtistTopTrack(getActivity(), getArtistId());
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelableArrayList("tracks", tracks);
     }
 
     public void getArtistTopTrack(Activity activity, String artistId) {
@@ -117,9 +127,45 @@ public class TrackListFragment extends ListFragment {
     }
 
     public void updateAdapter(List<Track> items) {
+        ArrayList<TrackParcelable> newTracks = new ArrayList<>();
+        for (Track item : items) {
+            Log.d(TAG, "track name=" + item.name);
+            Log.d(TAG, "album name=" + item.album.name);
+            if (item.album.images != null && !item.album.images.isEmpty()) {
+                Image large = null;
+                Image small = null;
+                Image base = null;
+                for (Image image : item.album.images) {
+                    switch (image.width) {
+                        case 640:
+                            large = image;
+                            break;
+                        case 300:
+                            small = image;
+                            break;
+                        default:
+                            base = image;
+                    }
+                }
+                if (large == null) {
+                    if (small != null && small.width > base.width) {
+                        large = small;
+                    } else {
+                        large = base;
+                    }
+                }
+                if (small == null) {
+                    small = base;
+                }
+                newTracks.add(new TrackParcelable(item.name, item.album.name, large.url, small.url, item.preview_url));
+            } else {
+                newTracks.add(new TrackParcelable(item.name, item.album.name, null, null, item.preview_url));
+            }
+        }
         adapter.clear();
-        adapter.addAll(items);
+        adapter.addAll(newTracks);
         adapter.notifyDataSetChanged();
+        tracks = newTracks;
     }
 
     @Subscribe

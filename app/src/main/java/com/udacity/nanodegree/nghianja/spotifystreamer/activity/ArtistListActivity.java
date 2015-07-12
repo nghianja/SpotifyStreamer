@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.Window;
 import android.widget.SearchView;
 import android.widget.Toast;
@@ -23,6 +24,7 @@ import com.udacity.nanodegree.nghianja.spotifystreamer.task.SearchArtistTask;
  * [3] http://stackoverflow.com/questions/9157504/put-a-progressbar-on-actionbar
  * [4] http://stackoverflow.com/questions/25730163/how-to-save-custom-listfragment-state-with-orientation-change
  * [5] http://stackoverflow.com/questions/15313598/once-for-all-how-to-correctly-save-instance-state-of-fragments-in-back-stack
+ * [6] http://stackoverflow.com/questions/9629313/auto-collapse-actionbar-searchview-on-soft-keyboard-close
  */
 public class ArtistListActivity extends Activity {
 
@@ -75,9 +77,19 @@ public class ArtistListActivity extends Activity {
 
         // Get the SearchView and set the searchable configuration
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-        SearchView searchView = (SearchView) menu.findItem(R.id.search).getActionView();
+        final MenuItem searchMenuItem = menu.findItem(R.id.search);
+        SearchView searchView = (SearchView) searchMenuItem.getActionView();
         // Assumes current activity is the searchable activity
         searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+
+        searchView.setOnQueryTextFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean queryTextFocused) {
+                if (!queryTextFocused) {
+                    searchMenuItem.collapseActionView();
+                }
+            }
+        });
 
         return true;
     }

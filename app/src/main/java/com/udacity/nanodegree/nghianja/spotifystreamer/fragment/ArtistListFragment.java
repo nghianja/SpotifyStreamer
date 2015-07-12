@@ -17,12 +17,14 @@ import com.udacity.nanodegree.nghianja.spotifystreamer.SpotifyStreamerApp;
 import com.udacity.nanodegree.nghianja.spotifystreamer.activity.TrackListActivity;
 import com.udacity.nanodegree.nghianja.spotifystreamer.adapter.ArtistArrayAdapter;
 import com.udacity.nanodegree.nghianja.spotifystreamer.event.SearchArtistEvent;
+import com.udacity.nanodegree.nghianja.spotifystreamer.parcelable.ArtistParcelable;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import kaaes.spotify.webapi.android.models.Artist;
 import kaaes.spotify.webapi.android.models.ArtistsPager;
+import kaaes.spotify.webapi.android.models.Image;
 
 
 /**
@@ -35,10 +37,12 @@ import kaaes.spotify.webapi.android.models.ArtistsPager;
  * [4] http://inthecheesefactory.com/blog/fragment-state-saving-best-practices/en
  * [5] http://stackoverflow.com/questions/10463560/retaining-list-in-list-fragment-on-orientation-change
  * [6] http://stackoverflow.com/questions/12503836/how-to-save-custom-arraylist-on-android-screen-rotate
+ * [7] http://stackoverflow.com/questions/5412746/android-fragment-onrestoreinstancestate
  */
 public class ArtistListFragment extends ListFragment {
 
     private static final String TAG = "ArtistListFragment";
+    private ArrayList<ArtistParcelable> artists;
     private ArtistArrayAdapter adapter;
     private boolean dualPane;
     private int currentPosition = 0;
@@ -47,7 +51,6 @@ public class ArtistListFragment extends ListFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // setRetainInstance(true);
         SpotifyStreamerApp.bus.register(this);
     }
 
@@ -67,17 +70,15 @@ public class ArtistListFragment extends ListFragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        if (savedInstanceState == null) {
-            List<Artist> artists = new ArrayList<>();
-            Artist artist = new Artist();
-            artist.name = "Search for artists in action bar";
+        if (savedInstanceState == null || !savedInstanceState.containsKey("artists")) {
+            artists = new ArrayList<>();
+            ArtistParcelable artist = new ArtistParcelable(null, "Search for artists in action bar", null);
             artists.add(artist);
-            adapter = new ArtistArrayAdapter(getActivity(), artists);
         } else {
-            // Restore last state for checked position.
-            currentPosition = savedInstanceState.getInt("choicePosition", 0);
+            artists = savedInstanceState.getParcelableArrayList("artists");
         }
 
+        adapter = new ArtistArrayAdapter(getActivity(), artists);
         setListAdapter(adapter);
 
         // Check to see if we have a frame in which to embed the details
@@ -85,11 +86,18 @@ public class ArtistListFragment extends ListFragment {
         View tracksFrame = getActivity().findViewById(R.id.tracks);
         dualPane = tracksFrame != null && tracksFrame.getVisibility() == View.VISIBLE;
 
+        if (savedInstanceState != null) {
+            // Restore last state for checked position.
+            currentPosition = savedInstanceState.getInt("choicePosition", 0);
+        }
+
         if (dualPane) {
             // In dual-pane mode, the list view highlights the selected item.
             getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
             // Make sure our UI is in the correct state.
             showDetails(currentPosition);
+        } else {
+            getActivity().getActionBar().setSubtitle(null);
         }
     }
 
@@ -97,6 +105,7 @@ public class ArtistListFragment extends ListFragment {
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putInt("choicePosition", currentPosition);
+        outState.putParcelableArrayList("artists", artists);
     }
 
     @Override
@@ -112,13 +121,16 @@ public class ArtistListFragment extends ListFragment {
      */
     void showDetails(int index) {
         currentPosition = index;
-        Artist artist = adapter.getItem(index);
+        ArtistParcelable artist = adapter.getItem(index);
 
         if (dualPane) {
-            if (artist.id != null && !artist.id.equals("")) {
+            if (artist.getId() != null && !artist.getId().equals("")) {
                 // We can display everything in-place with fragments, so update
                 // the list to highlight the selected item and show the data.
                 getListView().setItemChecked(index, true);
+                getActivity().getActionBar().setSubtitle(artist.getName());
+            } else {
+                getActivity().getActionBar().setSubtitle(null);
             }
 
             // Check what fragment is currently shown, replace if needed.
@@ -126,7 +138,7 @@ public class ArtistListFragment extends ListFragment {
                     getFragmentManager().findFragmentById(R.id.tracks);
             if (tracksFragment == null) {
                 // Make new fragment to show this selection.
-                tracksFragment = TrackListFragment.newInstance(index, artist.id);
+                tracksFragment = TrackListFragment.newInstance(index, artist.getId());
 
                 // Execute a transaction, replacing any existing fragment
                 // with this one inside the frame.
@@ -135,24 +147,51 @@ public class ArtistListFragment extends ListFragment {
                 ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
                 ft.commit();
             } else if (tracksFragment.getShownIndex() != index || index == 0) {
-                tracksFragment.getArtistTopTrack(getActivity(), artist.id);
+                tracksFragment.getArtistTopTrack(getActivity(), artist.getId());
             }
         } else {
-            if (artist.id != null && !artist.id.equals("")) {
+            if (artist.getId() != null && !artist.getId().equals("")) {
                 // launch activity to display an artist's top tracks
                 Intent intent = new Intent();
                 intent.setClass(getActivity(), TrackListActivity.class);
                 intent.putExtra("index", index);
-                intent.putExtra("SpotifyId", artist.id);
+                intent.putExtra("SpotifyId", artist.getId());
                 startActivity(intent);
             }
         }
     }
 
     public void updateAdapter(List<Artist> items) {
+        ArrayList<ArtistParcelable> newArtists = new ArrayList<>();
+        for (Artist item : items) {
+            Log.d(TAG, "artist name=" + item.name);
+            if (item.images != null && !item.images.isEmpty()) {
+                Image large = null;
+                Image small = null;
+                Image base = null;
+                for (Image image : item.images) {
+                    switch (image.width) {
+                        case 640:
+                            large = image;
+                            break;
+                        case 300:
+                            small = image;
+                            break;
+                        default:
+                            base = image;
+                    }
+                }
+                String url = (small != null) ? small.url : base.url;
+                Log.d(TAG, "thumbnail url=" + url);
+                newArtists.add(new ArtistParcelable(item.id, item.name, url));
+            } else {
+                newArtists.add(new ArtistParcelable(item.id, item.name, null));
+            }
+        }
         adapter.clear();
-        adapter.addAll(items);
+        adapter.addAll(newArtists);
         adapter.notifyDataSetChanged();
+        artists = newArtists;
     }
 
     @Subscribe
