@@ -9,19 +9,21 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".MainActivityFragment">
 
-    <!-- ProgressBar
-        android:id="@+id/loading"
-        style="?android:attr/progressBarStyleLarge"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:visibility="gone" / -->
+    <!--
+    References:
+    [1] http://stackoverflow.com/questions/2217753/changing-background-color-of-listview-items-on-android
+    [2] http://stackoverflow.com/questions/2562051/listview-item-background-via-custom-selector
+    [3] http://stackoverflow.com/questions/18386035/custom-selector-for-list-background
+    [4] http://www.michenux.net/android-listview-highlight-selected-item-387.html
+    -->
 
     <ListView
         android:id="@id/android:list"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_weight="1"
+        android:choiceMode="singleChoice"
+        android:listSelector="@android:color/transparent" />
 
     <TextView
         android:id="@id/android:empty"

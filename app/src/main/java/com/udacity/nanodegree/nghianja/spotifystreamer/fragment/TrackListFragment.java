@@ -15,6 +15,7 @@ import com.udacity.nanodegree.nghianja.spotifystreamer.R;
 import com.udacity.nanodegree.nghianja.spotifystreamer.SpotifyStreamerApp;
 import com.udacity.nanodegree.nghianja.spotifystreamer.adapter.TrackArrayAdapter;
 import com.udacity.nanodegree.nghianja.spotifystreamer.event.GetArtistTopTrackEvent;
+import com.udacity.nanodegree.nghianja.spotifystreamer.parcelable.ArtistParcelable;
 import com.udacity.nanodegree.nghianja.spotifystreamer.parcelable.TrackParcelable;
 import com.udacity.nanodegree.nghianja.spotifystreamer.task.GetArtistTopTrackTask;
 
@@ -45,24 +46,29 @@ public class TrackListFragment extends ListFragment {
      * Create a new instance of DetailsFragment, initialized to
      * show the text at 'index'.
      */
-    public static TrackListFragment newInstance(int index, String artistId) {
+    public static TrackListFragment newInstance(int index, ArtistParcelable artist) {
         TrackListFragment f = new TrackListFragment();
 
         // Supply index input as an argument.
         Bundle args = new Bundle();
         args.putInt("index", index);
-        args.putString("SpotifyId", artistId);
+        args.putParcelable("artist", artist);
         f.setArguments(args);
 
         return f;
+    }
+
+    public void setArguments(int index, ArtistParcelable artist) {
+        getArguments().putInt("index", index);
+        getArguments().putParcelable("artist", artist);
     }
 
     public int getShownIndex() {
         return getArguments().getInt("index", 0);
     }
 
-    public String getArtistId() {
-        return getArguments().getString("SpotifyId", "");
+    public ArtistParcelable getArtist() {
+        return getArguments().getParcelable("artist");
     }
 
     // this method is only called once for this fragment
@@ -99,7 +105,7 @@ public class TrackListFragment extends ListFragment {
 
         adapter = new TrackArrayAdapter(getActivity(), tracks);
         setListAdapter(adapter);
-        getArtistTopTrack(getActivity(), getArtistId());
+        getArtistTopTrack(getActivity());
     }
 
     @Override
@@ -108,22 +114,26 @@ public class TrackListFragment extends ListFragment {
         outState.putParcelableArrayList("tracks", tracks);
     }
 
-    public void getArtistTopTrack(Activity activity, String artistId) {
-        if (artistId != null && !artistId.equals("")) {
+    @Override
+    public void onListItemClick(ListView l, View v, int position, long id) {
+        Log.d(TAG, "position=" + position);
+        showPlayer(position);
+    }
+
+    public void showPlayer(int index) {
+    }
+
+    public void getArtistTopTrack(Activity activity) {
+        if (getArtist().getId() != null && !getArtist().getId().equals("")) {
             if (SpotifyStreamerApp.isNetworkAvailable(activity)) {
+                getActivity().getActionBar().setSubtitle(getArtist().getName());
                 activity.setProgressBarIndeterminateVisibility(true);
                 GetArtistTopTrackTask task = new GetArtistTopTrackTask();
-                task.execute(artistId, SpotifyStreamerApp.getCountryCode(activity));
+                task.execute(getArtist().getId(), SpotifyStreamerApp.getCountryCode(activity));
             } else {
                 Toast.makeText(activity, getResources().getString(R.string.no_network), Toast.LENGTH_SHORT).show();
             }
         }
-    }
-
-    @Override
-    public void onListItemClick(ListView l, View v, int position, long id) {
-        Log.d(TAG, "position=" + position);
-//        showDetails(position);
     }
 
     public void updateAdapter(List<Track> items) {

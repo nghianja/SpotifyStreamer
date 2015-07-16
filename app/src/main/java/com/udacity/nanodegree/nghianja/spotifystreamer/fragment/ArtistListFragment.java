@@ -38,6 +38,7 @@ import kaaes.spotify.webapi.android.models.Image;
  * [5] http://stackoverflow.com/questions/10463560/retaining-list-in-list-fragment-on-orientation-change
  * [6] http://stackoverflow.com/questions/12503836/how-to-save-custom-arraylist-on-android-screen-rotate
  * [7] http://stackoverflow.com/questions/5412746/android-fragment-onrestoreinstancestate
+ * [8] http://stackoverflow.com/questions/17919130/how-to-disable-the-particular-list-item-in-list-view-in-android
  */
 public class ArtistListFragment extends ListFragment {
 
@@ -80,6 +81,10 @@ public class ArtistListFragment extends ListFragment {
 
         adapter = new ArtistArrayAdapter(getActivity(), artists);
         setListAdapter(adapter);
+//
+//        if (savedInstanceState == null || !savedInstanceState.containsKey("artists")) {
+//            getListView().getChildAt(0).setEnabled(false);
+//        }
 
         // Check to see if we have a frame in which to embed the details
         // fragment directly in the containing UI.
@@ -92,12 +97,11 @@ public class ArtistListFragment extends ListFragment {
         }
 
         if (dualPane) {
-            // In dual-pane mode, the list view highlights the selected item.
-            getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+            // getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+            // getListView().setSelector(R.drawable.list_item_selector);
+
             // Make sure our UI is in the correct state.
             showDetails(currentPosition);
-        } else {
-            getActivity().getActionBar().setSubtitle(null);
         }
     }
 
@@ -119,26 +123,21 @@ public class ArtistListFragment extends ListFragment {
      * displaying a fragment in-place in the current UI, or starting a
      * whole new activity in which it is displayed.
      */
-    void showDetails(int index) {
+    public void showDetails(int index) {
         currentPosition = index;
         ArtistParcelable artist = adapter.getItem(index);
 
         if (dualPane) {
-            if (artist.getId() != null && !artist.getId().equals("")) {
-                // We can display everything in-place with fragments, so update
-                // the list to highlight the selected item and show the data.
-                getListView().setItemChecked(index, true);
-                getActivity().getActionBar().setSubtitle(artist.getName());
-            } else {
-                getActivity().getActionBar().setSubtitle(null);
-            }
+            // We can display everything in-place with fragments, so update
+            // the list to highlight the selected item and show the data.
+            getListView().setItemChecked(index, true);
 
             // Check what fragment is currently shown, replace if needed.
             TrackListFragment tracksFragment = (TrackListFragment)
                     getFragmentManager().findFragmentById(R.id.tracks);
             if (tracksFragment == null) {
                 // Make new fragment to show this selection.
-                tracksFragment = TrackListFragment.newInstance(index, artist.getId());
+                tracksFragment = TrackListFragment.newInstance(index, artist);
 
                 // Execute a transaction, replacing any existing fragment
                 // with this one inside the frame.
@@ -146,18 +145,17 @@ public class ArtistListFragment extends ListFragment {
                 ft.replace(R.id.tracks, tracksFragment);
                 ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
                 ft.commit();
-            } else if (tracksFragment.getShownIndex() != index || index == 0) {
-                tracksFragment.getArtistTopTrack(getActivity(), artist.getId());
+            } else {
+                tracksFragment.setArguments(index, artist);
+                tracksFragment.getArtistTopTrack(getActivity());
             }
         } else {
-            if (artist.getId() != null && !artist.getId().equals("")) {
-                // launch activity to display an artist's top tracks
-                Intent intent = new Intent();
-                intent.setClass(getActivity(), TrackListActivity.class);
-                intent.putExtra("index", index);
-                intent.putExtra("SpotifyId", artist.getId());
-                startActivity(intent);
-            }
+            // launch activity to display an artist's top tracks
+            Intent intent = new Intent();
+            intent.setClass(getActivity(), TrackListActivity.class);
+            intent.putExtra("index", index);
+            intent.putExtra("artist", artist);
+            startActivity(intent);
         }
     }
 

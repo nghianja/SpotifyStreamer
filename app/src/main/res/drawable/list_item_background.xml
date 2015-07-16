@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+References:
+[1] http://stackoverflow.com/questions/2217753/changing-background-color-of-listview-items-on-android
+[2] http://stackoverflow.com/questions/2562051/listview-item-background-via-custom-selector
+[3] http://www.michenux.net/android-listview-highlight-selected-item-387.html
+[4] http://stackoverflow.com/questions/9729517/showing-the-current-selection-in-a-listview/9729579
+-->
+
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:exitFadeDuration="@android:integer/config_shortAnimTime">
+    <item android:state_activated="true" android:drawable="@android:color/holo_green_dark" />
+    <item android:drawable="@android:color/transparent" />
+</selector>

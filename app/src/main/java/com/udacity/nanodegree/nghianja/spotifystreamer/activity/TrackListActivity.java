@@ -68,7 +68,7 @@ public class TrackListActivity extends Activity {
             startActivity(intent);
             return true;
         } else if (id == R.id.action_refresh) {
-            trackFragment.getArtistTopTrack(this, artistId);
+            trackFragment.getArtistTopTrack(this);
             return true;
         } else {
             return super.onOptionsItemSelected(item);

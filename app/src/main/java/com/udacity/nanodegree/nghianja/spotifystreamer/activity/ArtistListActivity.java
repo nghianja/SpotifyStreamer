@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.view.Window;
 import android.widget.SearchView;
 import android.widget.Toast;
@@ -29,6 +28,7 @@ import com.udacity.nanodegree.nghianja.spotifystreamer.task.SearchArtistTask;
 public class ArtistListActivity extends Activity {
 
     private static final String TAG = "ArtistListActivity";
+    private MenuItem searchMenuItem;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +61,8 @@ public class ArtistListActivity extends Activity {
             Log.d(TAG, "query=" + query);
 
             if (SpotifyStreamerApp.isNetworkAvailable(this)) {
+                getActionBar().setSubtitle(null);
+                searchMenuItem.collapseActionView();
                 setProgressBarIndeterminateVisibility(true);
                 SearchArtistTask task = new SearchArtistTask();
                 task.execute(query);
@@ -77,19 +79,10 @@ public class ArtistListActivity extends Activity {
 
         // Get the SearchView and set the searchable configuration
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-        final MenuItem searchMenuItem = menu.findItem(R.id.search);
+        searchMenuItem = menu.findItem(R.id.search);
         SearchView searchView = (SearchView) searchMenuItem.getActionView();
         // Assumes current activity is the searchable activity
         searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
-
-        searchView.setOnQueryTextFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View view, boolean queryTextFocused) {
-                if (!queryTextFocused) {
-                    searchMenuItem.collapseActionView();
-                }
-            }
-        });
 
         return true;
     }
