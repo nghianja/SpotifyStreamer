@@ -45,6 +45,7 @@ public class ArtistListFragment extends ListFragment {
     private static final String TAG = "ArtistListFragment";
     private ArrayList<ArtistParcelable> artists;
     private ArtistArrayAdapter adapter;
+    TrackListFragment tracksFragment;
     private boolean dualPane;
     private int currentPosition = 0;
 
@@ -133,8 +134,7 @@ public class ArtistListFragment extends ListFragment {
             getListView().setItemChecked(index, true);
 
             // Check what fragment is currently shown, replace if needed.
-            TrackListFragment tracksFragment = (TrackListFragment)
-                    getFragmentManager().findFragmentById(R.id.tracks);
+            tracksFragment = (TrackListFragment) getFragmentManager().findFragmentById(R.id.tracks);
             if (tracksFragment == null) {
                 // Make new fragment to show this selection.
                 tracksFragment = TrackListFragment.newInstance(index, artist);
@@ -150,12 +150,14 @@ public class ArtistListFragment extends ListFragment {
                 tracksFragment.getArtistTopTrack(getActivity());
             }
         } else {
-            // launch activity to display an artist's top tracks
-            Intent intent = new Intent();
-            intent.setClass(getActivity(), TrackListActivity.class);
-            intent.putExtra("index", index);
-            intent.putExtra("artist", artist);
-            startActivity(intent);
+            if (artist.getId() != null && !artist.getId().equals("")) {
+                // launch activity to display an artist's top tracks
+                Intent intent = new Intent();
+                intent.setClass(getActivity(), TrackListActivity.class);
+                intent.putExtra("index", index);
+                intent.putExtra("artist", artist);
+                startActivity(intent);
+            }
         }
     }
 
@@ -200,6 +202,9 @@ public class ArtistListFragment extends ListFragment {
             Toast.makeText(getActivity(), getResources().getString(R.string.connection_error), Toast.LENGTH_SHORT).show();
         } else {
             updateAdapter(items);
+            if (tracksFragment != null) {
+                tracksFragment.resetAdapter();
+            }
         }
         getActivity().setProgressBarIndeterminateVisibility(false);
     }

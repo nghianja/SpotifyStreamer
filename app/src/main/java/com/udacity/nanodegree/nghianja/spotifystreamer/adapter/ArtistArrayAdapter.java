@@ -52,6 +52,8 @@ public class ArtistArrayAdapter extends ArrayAdapter<ArtistParcelable> {
 
         if (artist.getImageUrl() != null) {
             Picasso.with(context).load(artist.getImageUrl()).into(holder.pictView);
+        } else {
+            holder.pictView.setImageResource(R.mipmap.ic_launcher);
         }
 
         holder.nameView.setText(artist.getName());

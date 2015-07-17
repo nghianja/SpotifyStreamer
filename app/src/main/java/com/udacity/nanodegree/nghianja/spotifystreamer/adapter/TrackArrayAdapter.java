@@ -56,6 +56,8 @@ public class TrackArrayAdapter extends ArrayAdapter<TrackParcelable> {
 
         if (track.getImageSmall() != null) {
             Picasso.with(context).load(Uri.parse(track.getImageSmall())).into(holder.thumbnailView);
+        } else {
+            holder.thumbnailView.setImageResource(R.mipmap.ic_launcher);
         }
 
         holder.songView.setText(track.getTrackName());

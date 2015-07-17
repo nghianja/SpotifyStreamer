@@ -136,6 +136,16 @@ public class TrackListFragment extends ListFragment {
         }
     }
 
+    public void resetAdapter() {
+        TrackParcelable track = new TrackParcelable("Waiting to load top tracks...", "", null, null, null);
+        adapter.clear();
+        adapter.add(track);
+        adapter.notifyDataSetChanged();
+        ArrayList<TrackParcelable> newTracks = new ArrayList<>();
+        newTracks.add(track);
+        tracks = newTracks;
+    }
+
     public void updateAdapter(List<Track> items) {
         ArrayList<TrackParcelable> newTracks = new ArrayList<>();
         for (Track item : items) {
