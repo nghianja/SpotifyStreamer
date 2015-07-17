@@ -38,7 +38,7 @@ import kaaes.spotify.webapi.android.models.Image;
  * [5] http://stackoverflow.com/questions/10463560/retaining-list-in-list-fragment-on-orientation-change
  * [6] http://stackoverflow.com/questions/12503836/how-to-save-custom-arraylist-on-android-screen-rotate
  * [7] http://stackoverflow.com/questions/5412746/android-fragment-onrestoreinstancestate
- * [8] http://stackoverflow.com/questions/17919130/how-to-disable-the-particular-list-item-in-list-view-in-android
+ * [8] http://stackoverflow.com/questions/16976431/change-background-color-of-selected-item-on-a-listview
  */
 public class ArtistListFragment extends ListFragment {
 
@@ -82,10 +82,6 @@ public class ArtistListFragment extends ListFragment {
 
         adapter = new ArtistArrayAdapter(getActivity(), artists);
         setListAdapter(adapter);
-//
-//        if (savedInstanceState == null || !savedInstanceState.containsKey("artists")) {
-//            getListView().getChildAt(0).setEnabled(false);
-//        }
 
         // Check to see if we have a frame in which to embed the details
         // fragment directly in the containing UI.
@@ -98,9 +94,6 @@ public class ArtistListFragment extends ListFragment {
         }
 
         if (dualPane) {
-            // getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-            // getListView().setSelector(R.drawable.list_item_selector);
-
             // Make sure our UI is in the correct state.
             showDetails(currentPosition);
         }
@@ -129,10 +122,6 @@ public class ArtistListFragment extends ListFragment {
         ArtistParcelable artist = adapter.getItem(index);
 
         if (dualPane) {
-            // We can display everything in-place with fragments, so update
-            // the list to highlight the selected item and show the data.
-            getListView().setItemChecked(index, true);
-
             // Check what fragment is currently shown, replace if needed.
             tracksFragment = (TrackListFragment) getFragmentManager().findFragmentById(R.id.tracks);
             if (tracksFragment == null) {
@@ -149,8 +138,14 @@ public class ArtistListFragment extends ListFragment {
                 tracksFragment.setArguments(index, artist);
                 tracksFragment.getArtistTopTrack(getActivity());
             }
+            if (artist.getId() != null && !artist.getId().equals("")) {
+                adapter.setArtistId(artist.getId());
+                adapter.notifyDataSetChanged();
+            }
         } else {
             if (artist.getId() != null && !artist.getId().equals("")) {
+                adapter.setArtistId(artist.getId());
+                adapter.notifyDataSetChanged();
                 // launch activity to display an artist's top tracks
                 Intent intent = new Intent();
                 intent.setClass(getActivity(), TrackListActivity.class);
