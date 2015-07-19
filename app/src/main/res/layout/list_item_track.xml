@@ -13,7 +13,7 @@
         android:layout_alignParentTop="true"
         android:layout_marginRight="@dimen/activity_horizontal_margin"
         android:contentDescription="Album Art"
-        android:scaleType="fitXY"
+        android:scaleType="centerCrop"
         android:src="@mipmap/ic_launcher" />
 
     <TextView
