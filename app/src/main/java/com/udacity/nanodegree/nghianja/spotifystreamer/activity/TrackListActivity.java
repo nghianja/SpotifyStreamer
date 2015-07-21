@@ -51,7 +51,7 @@ public class TrackListActivity extends Activity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_sub, menu);
+        getMenuInflater().inflate(R.menu.menu_track, menu);
         return true;
     }
 
@@ -66,9 +66,6 @@ public class TrackListActivity extends Activity {
         if (id == R.id.action_settings) {
             Intent intent = new Intent(this, SettingsActivity.class);
             startActivity(intent);
-            return true;
-        } else if (id == R.id.action_refresh) {
-            trackFragment.getArtistTopTrack(this);
             return true;
         } else {
             return super.onOptionsItemSelected(item);

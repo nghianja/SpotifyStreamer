@@ -1,5 +1,6 @@
 package com.udacity.nanodegree.nghianja.spotifystreamer.fragment;
 
+import android.app.Activity;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.Preference;
@@ -15,6 +16,22 @@ import com.udacity.nanodegree.nghianja.spotifystreamer.R;
  */
 public class SettingsFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
     public static final String KEY_PREF_COUNTRY = "pref_country";
+    private OnSettingsChangedListener listener;
+
+    // Container Activity must implement this interface
+    public interface OnSettingsChangedListener {
+        public void onSettingsChanged(String key);
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        try {
+            listener = (OnSettingsChangedListener) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString() + " must implement OnSettingsChangedListener");
+        }
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -47,5 +64,6 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
                 connectionPref.setSummary(country);
             }
         }
+        listener.onSettingsChanged(key);
     }
 }

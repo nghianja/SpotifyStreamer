@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.MenuItem;
 
+import com.udacity.nanodegree.nghianja.spotifystreamer.SpotifyStreamerApp;
+import com.udacity.nanodegree.nghianja.spotifystreamer.event.ChangeSettingsEvent;
 import com.udacity.nanodegree.nghianja.spotifystreamer.fragment.SettingsFragment;
 
 /**
@@ -11,7 +13,8 @@ import com.udacity.nanodegree.nghianja.spotifystreamer.fragment.SettingsFragment
  * [1] http://stackoverflow.com/questions/13941276/i-made-confuse-about-navigation-between-navigateupto-and-using-intent
  * [2] http://stackoverflow.com/questions/19184154/dynamically-set-parent-activity
  */
-public class SettingsActivity extends Activity {
+public class SettingsActivity extends Activity implements SettingsFragment.OnSettingsChangedListener {
+    private String key = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,10 +33,16 @@ public class SettingsActivity extends Activity {
         switch (item.getItemId()) {
             // Respond to the action bar's Up/Home button
             case android.R.id.home:
+                if (key != null)
+                    SpotifyStreamerApp.bus.post(new ChangeSettingsEvent(key));
                 finish();
                 return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void onSettingsChanged(String key) {
+        this.key = key;
+    }
 }

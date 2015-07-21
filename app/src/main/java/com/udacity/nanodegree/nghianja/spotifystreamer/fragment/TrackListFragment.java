@@ -14,6 +14,7 @@ import com.squareup.otto.Subscribe;
 import com.udacity.nanodegree.nghianja.spotifystreamer.R;
 import com.udacity.nanodegree.nghianja.spotifystreamer.SpotifyStreamerApp;
 import com.udacity.nanodegree.nghianja.spotifystreamer.adapter.TrackArrayAdapter;
+import com.udacity.nanodegree.nghianja.spotifystreamer.event.ChangeSettingsEvent;
 import com.udacity.nanodegree.nghianja.spotifystreamer.event.GetArtistTopTrackEvent;
 import com.udacity.nanodegree.nghianja.spotifystreamer.parcelable.ArtistParcelable;
 import com.udacity.nanodegree.nghianja.spotifystreamer.parcelable.TrackParcelable;
@@ -198,6 +199,14 @@ public class TrackListFragment extends ListFragment {
             updateAdapter(items);
         }
         getActivity().setProgressBarIndeterminateVisibility(false);
+    }
+
+    @Subscribe
+    public void onSettingsChanged(ChangeSettingsEvent event) {
+        if (event.getKey().equals(SettingsFragment.KEY_PREF_COUNTRY)) {
+            Toast.makeText(getActivity(), "Refreshing top tracks...", Toast.LENGTH_SHORT).show();
+            getArtistTopTrack(getActivity());
+        }
     }
 
 }
