@@ -130,10 +130,10 @@ public class ArtistListFragment extends ListFragment {
 
                 // Execute a transaction, replacing any existing fragment
                 // with this one inside the frame.
-                FragmentTransaction ft = getFragmentManager().beginTransaction();
-                ft.replace(R.id.tracks, tracksFragment);
-                ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
-                ft.commit();
+                FragmentTransaction transaction = getFragmentManager().beginTransaction();
+                transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
+                transaction.replace(R.id.tracks, tracksFragment);
+                transaction.commit();
             } else {
                 tracksFragment.setArguments(index, artist);
                 tracksFragment.getArtistTopTrack(getActivity());

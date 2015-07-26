@@ -1,7 +1,11 @@
 package com.udacity.nanodegree.nghianja.spotifystreamer.fragment;
 
 import android.app.Activity;
+import android.app.DialogFragment;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.app.ListFragment;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -36,6 +40,7 @@ import kaaes.spotify.webapi.android.models.Tracks;
  * [2] http://stackoverflow.com/questions/15392261/android-pass-dataextras-to-a-fragment
  * [3] http://stackoverflow.com/questions/10463560/retaining-list-in-list-fragment-on-orientation-change
  * [4] http://stackoverflow.com/questions/14835828/keep-list-fragment-selected-item-position-on-orientation-change
+ * [5] http://stackoverflow.com/questions/11457027/dialogfragment-fill-screen-on-phone
  */
 public class TrackListFragment extends ListFragment {
 
@@ -98,7 +103,7 @@ public class TrackListFragment extends ListFragment {
 
         if (savedInstanceState == null || !savedInstanceState.containsKey("tracks")) {
             tracks = new ArrayList<>();
-            TrackParcelable track = new TrackParcelable("Waiting to load top tracks...", "", null, null, null);
+            TrackParcelable track = new TrackParcelable("Waiting to load top tracks...", "", "", null, null, null);
             tracks.add(track);
         } else {
             tracks = savedInstanceState.getParcelableArrayList("tracks");
@@ -122,6 +127,19 @@ public class TrackListFragment extends ListFragment {
     }
 
     public void showPlayer(int index) {
+        TrackParcelable track = adapter.getItem(index);
+        FragmentManager fragmentManager = getFragmentManager();
+        DialogFragment newFragment = PlayerFragment.newInstance(index, track);
+
+        if (getResources().getConfiguration().orientation
+                == Configuration.ORIENTATION_LANDSCAPE) {
+            newFragment.show(fragmentManager, "dialog");
+        } else {
+            FragmentTransaction transaction = fragmentManager.beginTransaction();
+            // For a little polish, specify a transition animation
+            transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+            transaction.add(android.R.id.content, newFragment).addToBackStack(null).commit();
+        }
     }
 
     public void getArtistTopTrack(Activity activity) {
@@ -138,7 +156,7 @@ public class TrackListFragment extends ListFragment {
     }
 
     public void resetAdapter() {
-        TrackParcelable track = new TrackParcelable("Waiting to load top tracks...", "", null, null, null);
+        TrackParcelable track = new TrackParcelable("Waiting to load top tracks...", "", "", null, null, null);
         adapter.clear();
         adapter.add(track);
         adapter.notifyDataSetChanged();
@@ -178,9 +196,9 @@ public class TrackListFragment extends ListFragment {
                 if (small == null) {
                     small = base;
                 }
-                newTracks.add(new TrackParcelable(item.name, item.album.name, large.url, small.url, item.preview_url));
+                newTracks.add(new TrackParcelable(item.name, item.album.name, getArtist().getName(), large.url, small.url, item.preview_url));
             } else {
-                newTracks.add(new TrackParcelable(item.name, item.album.name, null, null, item.preview_url));
+                newTracks.add(new TrackParcelable(item.name, item.album.name, getArtist().getName(), null, null, item.preview_url));
             }
         }
         adapter.clear();

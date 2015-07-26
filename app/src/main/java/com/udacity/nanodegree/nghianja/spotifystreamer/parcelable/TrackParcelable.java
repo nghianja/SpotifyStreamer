@@ -14,14 +14,16 @@ public class TrackParcelable implements Parcelable {
 
     private String trackName;
     private String albumName;
+    private String artistName;
     private String imageLarge;
     private String imageSmall;
     private String previewUrl;
 
     // Constructor
-    public TrackParcelable(String trackName, String albumName, String imageLarge, String imageSmall, String previewUrl) {
+    public TrackParcelable(String trackName, String albumName, String artistName, String imageLarge, String imageSmall, String previewUrl) {
         this.trackName = trackName;
         this.albumName = albumName;
+        this.artistName = artistName;
         this.imageLarge = imageLarge;
         this.imageSmall = imageSmall;
         this.previewUrl = previewUrl;
@@ -43,6 +45,10 @@ public class TrackParcelable implements Parcelable {
     public void setAlbumName(String albumName) {
         this.albumName = albumName;
     }
+
+    public String getArtistName() { return artistName; }
+
+    public void setArtistName(String artistName) { this.artistName = artistName; }
 
     public String getImageLarge() {
         return imageLarge;
