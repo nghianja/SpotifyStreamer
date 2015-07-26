@@ -159,7 +159,6 @@ public class ArtistListFragment extends ListFragment {
     public void updateAdapter(List<Artist> items) {
         ArrayList<ArtistParcelable> newArtists = new ArrayList<>();
         for (Artist item : items) {
-            Log.d(TAG, "artist name=" + item.name);
             if (item.images != null && !item.images.isEmpty()) {
                 Image large = null;
                 Image small = null;
@@ -177,7 +176,6 @@ public class ArtistListFragment extends ListFragment {
                     }
                 }
                 String url = (small != null) ? small.url : base.url;
-                Log.d(TAG, "thumbnail url=" + url);
                 newArtists.add(new ArtistParcelable(item.id, item.name, url));
             } else {
                 newArtists.add(new ArtistParcelable(item.id, item.name, null));

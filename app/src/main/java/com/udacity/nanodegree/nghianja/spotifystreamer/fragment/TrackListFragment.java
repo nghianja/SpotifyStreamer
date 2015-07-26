@@ -168,8 +168,6 @@ public class TrackListFragment extends ListFragment {
     public void updateAdapter(List<Track> items) {
         ArrayList<TrackParcelable> newTracks = new ArrayList<>();
         for (Track item : items) {
-            Log.d(TAG, "track name=" + item.name);
-            Log.d(TAG, "album name=" + item.album.name);
             if (item.album.images != null && !item.album.images.isEmpty()) {
                 Image large = null;
                 Image small = null;
