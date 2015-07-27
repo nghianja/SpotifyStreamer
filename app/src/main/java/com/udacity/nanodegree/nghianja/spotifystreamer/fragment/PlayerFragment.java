@@ -6,6 +6,7 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,31 +18,47 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.squareup.otto.Subscribe;
 import com.squareup.picasso.Picasso;
 import com.udacity.nanodegree.nghianja.spotifystreamer.R;
+import com.udacity.nanodegree.nghianja.spotifystreamer.SpotifyStreamerApp;
+import com.udacity.nanodegree.nghianja.spotifystreamer.event.PlayerCompletionEvent;
+import com.udacity.nanodegree.nghianja.spotifystreamer.event.PlayerPreparedEvent;
+import com.udacity.nanodegree.nghianja.spotifystreamer.listener.PlayerCompletionListener;
+import com.udacity.nanodegree.nghianja.spotifystreamer.listener.PlayerPreparedListener;
 import com.udacity.nanodegree.nghianja.spotifystreamer.parcelable.TrackParcelable;
 
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Implementation of DialogFragment for playing the track preview stream of a currently selected track.
- *
+ * <p/>
  * References
  * [1] http://mrbool.com/how-to-play-audio-files-in-android-with-a-seekbar-feature-and-mediaplayer-class/28243
  * [2] http://code.tutsplus.com/tutorials/create-a-music-player-on-android-song-playback--mobile-22778
  * [3] http://www.vogella.com/tutorials/AndroidBackgroundProcessing/article.html
  * [4] http://stackoverflow.com/questions/10307131/android-mediaplayer-prepareasync-method
- * [5] http://stackoverflow.com/questions/12112061/handle-button-clicks-in-a-dialogfragment
+ * [5] http://stackoverflow.com/questions/15635746/how-to-detect-song-playing-is-completed
+ * [6] http://stackoverflow.com/questions/12112061/handle-button-clicks-in-a-dialogfragment
  */
 public class PlayerFragment extends DialogFragment {
 
     private static final String TAG = "PlayerFragment";
+    private TextView playArtist;
+    private TextView playAlbum;
+    private ImageView playArtwork;
+    private TextView playTrack;
     private SeekBar playSeeker;
     private TextView playEnd;
     private ImageButton playPause;
     private MediaPlayer mediaPlayer;
-    private Thread playThread;
+    private Handler seekHandler;
+    private Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+            updateSeekBar();
+        }
+    };
 
     public static PlayerFragment newInstance(int index, TrackParcelable track) {
         PlayerFragment f = new PlayerFragment();
@@ -68,32 +85,54 @@ public class PlayerFragment extends DialogFragment {
         return getArguments().getParcelable("track");
     }
 
-    /** The system calls this to get the DialogFragment's layout, regardless
-     of whether it's being displayed as a dialog or an embedded fragment. */
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        SpotifyStreamerApp.bus.register(this);
+    }
+
+    @Override
+    public void onDestroy() {
+        SpotifyStreamerApp.bus.unregister(this);
+        super.onDestroy();
+    }
+
+    /**
+     * The system calls this to get the DialogFragment's layout, regardless
+     * of whether it's being displayed as a dialog or an embedded fragment.
+     */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_player, container, false);
 
+        playArtist = (TextView) v.findViewById(R.id.play_artist);
+        playAlbum = (TextView) v.findViewById(R.id.play_album);
+        playArtwork = (ImageView) v.findViewById(R.id.play_artwork);
+        playTrack = (TextView) v.findViewById(R.id.play_track);
         playSeeker = (SeekBar) v.findViewById(R.id.play_seeker);
         playEnd = (TextView) v.findViewById(R.id.play_end);
         playPause = (ImageButton) v.findViewById(R.id.play_pause);
 
-        TrackParcelable track = getTrack();
-        TextView playArtist = (TextView) v.findViewById(R.id.play_artist);
-        TextView playAlbum = (TextView) v.findViewById(R.id.play_album);
-        TextView playTrack = (TextView) v.findViewById(R.id.play_track);
-
-        playArtist.setText(track.getArtistName());
-        playAlbum.setText(track.getAlbumName());
-        playTrack.setText(track.getTrackName());
-        if (track.getImageLarge() != null) {
-            Picasso.with(getActivity()).load(Uri.parse(track.getImageLarge())).into((ImageView) v.findViewById(R.id.play_artwork));
-        }
+        playPause.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mediaPlayer.isPlaying()) {
+                    mediaPlayer.pause();
+                    playPause.setImageResource(android.R.drawable.ic_media_play);
+                } else if (mediaPlayer.getDuration() > 0) {
+                    mediaPlayer.start();
+                    playPause.setImageResource(android.R.drawable.ic_media_pause);
+                }
+            }
+        });
+        updateViews();
 
         return v;
     }
 
-    /** The system calls this only when creating the layout in a dialog. */
+    /**
+     * The system calls this only when creating the layout in a dialog.
+     */
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         // The only reason you might override this method when using onCreateView() is
@@ -109,25 +148,8 @@ public class PlayerFragment extends DialogFragment {
     public void onStart() {
         super.onStart();
         mediaPlayer = new MediaPlayer();
-        mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-            @Override
-            public void onPrepared(MediaPlayer mp) {
-                int duration = mp.getDuration();
-                String endText = String.format("%01d:%02d",
-                        TimeUnit.MILLISECONDS.toMinutes(duration),
-                        TimeUnit.MILLISECONDS.toSeconds(duration) % TimeUnit.MINUTES.toSeconds(1));
-                Toast.makeText(getActivity(), endText + " preview loaded", Toast.LENGTH_SHORT).show();
-
-                playSeeker.setMax(duration);
-                playEnd.setText(endText);
-                playPause.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        mediaPlayer.start();
-                    }
-                });
-            }
-        });
+        mediaPlayer.setOnPreparedListener(new PlayerPreparedListener());
+        mediaPlayer.setOnCompletionListener(new PlayerCompletionListener());
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         try {
             Log.d(TAG, "previewUrl=" + getTrack().getPreviewUrl());
@@ -141,10 +163,57 @@ public class PlayerFragment extends DialogFragment {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        if (seekHandler == null) {
+            seekHandler = new Handler();
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        seekHandler.removeCallbacks(runnable);
+    }
+
+    @Override
     public void onStop() {
         super.onStop();
         mediaPlayer.release();
         mediaPlayer = null;
+    }
+
+    public void updateViews() {
+        TrackParcelable track = getTrack();
+
+        playArtist.setText(track.getArtistName());
+        playAlbum.setText(track.getAlbumName());
+        if (track.getImageLarge() != null) {
+            Picasso.with(getActivity()).load(Uri.parse(track.getImageLarge())).into(playArtwork);
+        }
+        playTrack.setText(track.getTrackName());
+        playSeeker.setMax(0);
+        playEnd.setText("0:00");
+    }
+
+    public void updateSeekBar() {
+        playSeeker.setProgress(mediaPlayer.getCurrentPosition());
+        seekHandler.postDelayed(runnable, 100);
+    }
+
+    @Subscribe
+    public void onPrepared(PlayerPreparedEvent event) {
+        playSeeker.setMax(event.getDuration());
+        playEnd.setText(event.getEndText());
+        Toast.makeText(getActivity(), event.getEndText() + " preview loaded", Toast.LENGTH_SHORT).show();
+        updateSeekBar();
+    }
+
+    @Subscribe
+    public void onCompletion(PlayerCompletionEvent event) {
+        if (!event.isLooping()) {
+            playPause.setImageResource(android.R.drawable.ic_media_play);
+        }
     }
 
 }
