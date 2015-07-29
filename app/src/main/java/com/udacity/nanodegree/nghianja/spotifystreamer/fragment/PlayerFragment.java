@@ -24,8 +24,10 @@ import com.udacity.nanodegree.nghianja.spotifystreamer.R;
 import com.udacity.nanodegree.nghianja.spotifystreamer.SpotifyStreamerApp;
 import com.udacity.nanodegree.nghianja.spotifystreamer.event.PlayerCompletionEvent;
 import com.udacity.nanodegree.nghianja.spotifystreamer.event.PlayerPreparedEvent;
+import com.udacity.nanodegree.nghianja.spotifystreamer.event.SeekBarChangeEvent;
 import com.udacity.nanodegree.nghianja.spotifystreamer.listener.PlayerCompletionListener;
 import com.udacity.nanodegree.nghianja.spotifystreamer.listener.PlayerPreparedListener;
+import com.udacity.nanodegree.nghianja.spotifystreamer.listener.SeekBarChangeListener;
 import com.udacity.nanodegree.nghianja.spotifystreamer.parcelable.TrackParcelable;
 
 import java.io.IOException;
@@ -40,6 +42,8 @@ import java.io.IOException;
  * [4] http://stackoverflow.com/questions/10307131/android-mediaplayer-prepareasync-method
  * [5] http://stackoverflow.com/questions/15635746/how-to-detect-song-playing-is-completed
  * [6] http://stackoverflow.com/questions/12112061/handle-button-clicks-in-a-dialogfragment
+ * [7] http://stackoverflow.com/questions/8956218/android-seekbar-setonseekbarchangelistener
+ * [8] http://stackoverflow.com/questions/17439252/how-to-pause-handler-postdelayed-timer-on-android
  */
 public class PlayerFragment extends DialogFragment {
 
@@ -113,6 +117,7 @@ public class PlayerFragment extends DialogFragment {
         playEnd = (TextView) v.findViewById(R.id.play_end);
         playPause = (ImageButton) v.findViewById(R.id.play_pause);
 
+        playSeeker.setOnSeekBarChangeListener(new SeekBarChangeListener());
         playPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -151,15 +156,7 @@ public class PlayerFragment extends DialogFragment {
         mediaPlayer.setOnPreparedListener(new PlayerPreparedListener());
         mediaPlayer.setOnCompletionListener(new PlayerCompletionListener());
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-        try {
-            Log.d(TAG, "previewUrl=" + getTrack().getPreviewUrl());
-            mediaPlayer.setDataSource(getTrack().getPreviewUrl());
-            Log.i(TAG, "preparing MediaPlayer...");
-            mediaPlayer.prepareAsync();
-        } catch (IOException e) {
-            Log.e(TAG, e.toString());
-            Toast.makeText(getActivity(), getResources().getString(R.string.no_preview), Toast.LENGTH_SHORT).show();
-        }
+        preparePlayer();
     }
 
     @Override
@@ -201,6 +198,17 @@ public class PlayerFragment extends DialogFragment {
         seekHandler.postDelayed(runnable, 100);
     }
 
+    public void preparePlayer() {
+        try {
+            Log.d(TAG, "previewUrl=" + getTrack().getPreviewUrl());
+            mediaPlayer.setDataSource(getTrack().getPreviewUrl());
+            mediaPlayer.prepareAsync();
+        } catch (IOException e) {
+            Log.e(TAG, e.toString());
+            Toast.makeText(getActivity(), getResources().getString(R.string.no_preview), Toast.LENGTH_SHORT).show();
+        }
+    }
+
     @Subscribe
     public void onPrepared(PlayerPreparedEvent event) {
         playSeeker.setMax(event.getDuration());
@@ -213,6 +221,21 @@ public class PlayerFragment extends DialogFragment {
     public void onCompletion(PlayerCompletionEvent event) {
         if (!event.isLooping()) {
             playPause.setImageResource(android.R.drawable.ic_media_play);
+        }
+    }
+
+    @Subscribe
+    public void onSeekBarChanged(SeekBarChangeEvent event) {
+        switch (event.getCallback()) {
+            case PROGRESS_CHANGED:
+                mediaPlayer.seekTo(event.getProgress());
+                break;
+            case START_TRACKING_TOUCH:
+                seekHandler.removeCallbacks(runnable);
+                break;
+            case STOP_TRACKING_TOUCH:
+                seekHandler.postDelayed(runnable, 100);
+                break;
         }
     }
 
