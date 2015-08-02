@@ -127,9 +127,8 @@ public class TrackListFragment extends ListFragment {
     }
 
     public void showPlayer(int index) {
-        TrackParcelable track = adapter.getItem(index);
         FragmentManager fragmentManager = getFragmentManager();
-        DialogFragment newFragment = PlayerFragment.newInstance(index, track);
+        DialogFragment newFragment = PlayerFragment.newInstance(index, tracks);
 
         if (getResources().getConfiguration().orientation
                 == Configuration.ORIENTATION_LANDSCAPE) {

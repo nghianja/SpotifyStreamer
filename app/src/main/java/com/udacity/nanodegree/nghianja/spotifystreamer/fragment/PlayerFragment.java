@@ -31,6 +31,7 @@ import com.udacity.nanodegree.nghianja.spotifystreamer.listener.SeekBarChangeLis
 import com.udacity.nanodegree.nghianja.spotifystreamer.parcelable.TrackParcelable;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * Implementation of DialogFragment for playing the track preview stream of a currently selected track.
@@ -54,7 +55,9 @@ public class PlayerFragment extends DialogFragment {
     private TextView playTrack;
     private SeekBar playSeeker;
     private TextView playEnd;
+    private ImageButton playPrevious;
     private ImageButton playPause;
+    private ImageButton playNext;
     private MediaPlayer mediaPlayer;
     private Handler seekHandler;
     private Runnable runnable = new Runnable() {
@@ -63,30 +66,30 @@ public class PlayerFragment extends DialogFragment {
             updateSeekBar();
         }
     };
+    private boolean isPrepared = false;
 
-    public static PlayerFragment newInstance(int index, TrackParcelable track) {
+    public static PlayerFragment newInstance(int index, ArrayList<TrackParcelable> tracks) {
         PlayerFragment f = new PlayerFragment();
 
         // Supply index input as an argument.
         Bundle args = new Bundle();
         args.putInt("index", index);
-        args.putParcelable("track", track);
+        args.putParcelableArrayList("tracks", tracks);
         f.setArguments(args);
 
         return f;
-    }
-
-    public void setArguments(int index, TrackParcelable track) {
-        getArguments().putInt("index", index);
-        getArguments().putParcelable("track", track);
     }
 
     public int getShownIndex() {
         return getArguments().getInt("index", 0);
     }
 
+    public ArrayList<TrackParcelable> getTracks() {
+        return getArguments().getParcelableArrayList("tracks");
+    }
+
     public TrackParcelable getTrack() {
-        return getArguments().getParcelable("track");
+        return getTracks().get(getShownIndex());
     }
 
     @Override
@@ -115,19 +118,51 @@ public class PlayerFragment extends DialogFragment {
         playTrack = (TextView) v.findViewById(R.id.play_track);
         playSeeker = (SeekBar) v.findViewById(R.id.play_seeker);
         playEnd = (TextView) v.findViewById(R.id.play_end);
+        playPrevious = (ImageButton) v.findViewById(R.id.play_previous);
         playPause = (ImageButton) v.findViewById(R.id.play_pause);
+        playNext = (ImageButton) v.findViewById(R.id.play_next);
 
         playSeeker.setOnSeekBarChangeListener(new SeekBarChangeListener());
+        playPrevious.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                int index = getShownIndex();
+                ArrayList<TrackParcelable> tracks = getTracks();
+                if (index > 0) {
+                    getArguments().putInt("index", index - 1);
+                } else {
+                    getArguments().putInt("index", tracks.size() - 1);
+                }
+                changeTrack();
+            }
+        });
         playPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mediaPlayer.isPlaying()) {
-                    mediaPlayer.pause();
-                    playPause.setImageResource(android.R.drawable.ic_media_play);
-                } else if (mediaPlayer.getDuration() > 0) {
-                    mediaPlayer.start();
-                    playPause.setImageResource(android.R.drawable.ic_media_pause);
+                if (isPrepared) {
+                    if (mediaPlayer.isPlaying()) {
+                        mediaPlayer.pause();
+                        playPause.setImageResource(android.R.drawable.ic_media_play);
+                    } else {
+                        mediaPlayer.start();
+                        playPause.setImageResource(android.R.drawable.ic_media_pause);
+                    }
+                } else {
+                    Toast.makeText(getActivity(), "preview not loaded yet", Toast.LENGTH_SHORT).show();
                 }
+            }
+        });
+        playNext.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                int index = getShownIndex();
+                ArrayList<TrackParcelable> tracks = getTracks();
+                if (index < tracks.size() - 1) {
+                    getArguments().putInt("index", index + 1);
+                } else {
+                    getArguments().putInt("index", 0);
+                }
+                changeTrack();
             }
         });
         updateViews();
@@ -191,6 +226,7 @@ public class PlayerFragment extends DialogFragment {
         playTrack.setText(track.getTrackName());
         playSeeker.setMax(0);
         playEnd.setText("0:00");
+        playPause.setImageResource(android.R.drawable.ic_media_play);
     }
 
     public void updateSeekBar() {
@@ -200,6 +236,7 @@ public class PlayerFragment extends DialogFragment {
 
     public void preparePlayer() {
         try {
+            isPrepared = false;
             Log.d(TAG, "previewUrl=" + getTrack().getPreviewUrl());
             mediaPlayer.setDataSource(getTrack().getPreviewUrl());
             mediaPlayer.prepareAsync();
@@ -209,8 +246,16 @@ public class PlayerFragment extends DialogFragment {
         }
     }
 
+    public void changeTrack() {
+        seekHandler.removeCallbacks(runnable);
+        mediaPlayer.reset();
+        updateViews();
+        preparePlayer();
+    }
+
     @Subscribe
     public void onPrepared(PlayerPreparedEvent event) {
+        isPrepared = true;
         playSeeker.setMax(event.getDuration());
         playEnd.setText(event.getEndText());
         Toast.makeText(getActivity(), event.getEndText() + " preview loaded", Toast.LENGTH_SHORT).show();
