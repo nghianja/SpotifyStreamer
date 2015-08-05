@@ -32,6 +32,7 @@ import com.udacity.nanodegree.nghianja.spotifystreamer.parcelable.TrackParcelabl
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Implementation of DialogFragment for playing the track preview stream of a currently selected track.
@@ -49,11 +50,14 @@ import java.util.ArrayList;
 public class PlayerFragment extends DialogFragment {
 
     private static final String TAG = "PlayerFragment";
+    private long durationMM;
+    private long durationSS;
     private TextView playArtist;
     private TextView playAlbum;
     private ImageView playArtwork;
     private TextView playTrack;
     private SeekBar playSeeker;
+    private TextView playStart;
     private TextView playEnd;
     private ImageButton playPrevious;
     private ImageButton playPause;
@@ -117,6 +121,7 @@ public class PlayerFragment extends DialogFragment {
         playArtwork = (ImageView) v.findViewById(R.id.play_artwork);
         playTrack = (TextView) v.findViewById(R.id.play_track);
         playSeeker = (SeekBar) v.findViewById(R.id.play_seeker);
+        playStart = (TextView) v.findViewById(R.id.play_start);
         playEnd = (TextView) v.findViewById(R.id.play_end);
         playPrevious = (ImageButton) v.findViewById(R.id.play_previous);
         playPause = (ImageButton) v.findViewById(R.id.play_pause);
@@ -225,12 +230,18 @@ public class PlayerFragment extends DialogFragment {
         }
         playTrack.setText(track.getTrackName());
         playSeeker.setMax(0);
+        playStart.setText("0:00");
         playEnd.setText("0:00");
         playPause.setImageResource(android.R.drawable.ic_media_play);
     }
 
     public void updateSeekBar() {
-        playSeeker.setProgress(mediaPlayer.getCurrentPosition());
+        int currentPosition = mediaPlayer.getCurrentPosition();
+        long currentMM = TimeUnit.MILLISECONDS.toMinutes(currentPosition);
+        long currentSS = TimeUnit.MILLISECONDS.toSeconds(currentPosition) % TimeUnit.MINUTES.toSeconds(1);
+        playSeeker.setProgress(currentPosition);
+        playStart.setText(String.format("%01d:%02d", currentMM, currentSS));
+        playEnd.setText(String.format("%01d:%02d", durationMM - currentMM, durationSS - currentSS));
         seekHandler.postDelayed(runnable, 100);
     }
 
@@ -259,6 +270,8 @@ public class PlayerFragment extends DialogFragment {
         playSeeker.setMax(event.getDuration());
         playEnd.setText(event.getEndText());
         Toast.makeText(getActivity(), event.getEndText() + " preview loaded", Toast.LENGTH_SHORT).show();
+        durationMM = TimeUnit.MILLISECONDS.toMinutes(event.getDuration());
+        durationSS = TimeUnit.MILLISECONDS.toSeconds(event.getDuration()) % TimeUnit.MINUTES.toSeconds(1);
         updateSeekBar();
     }
 
