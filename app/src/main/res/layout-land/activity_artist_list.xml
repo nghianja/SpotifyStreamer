@@ -20,7 +20,7 @@
         android:background="#000000" />
 
     <FrameLayout
-        android:id="@+id/tracks"
+        android:id="@+id/track_list"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="3" />

@@ -3,11 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:baselineAligned="false"
-    android:divider="?android:attr/dividerHorizontal"
     android:orientation="horizontal"
-    android:showDividers="middle"
-    tools:context="com.udacity.nanodegree.nghianja.spotifystreamer.activity.ArtistListActivity">
+    android:showDividers="middle">
 
     <!--
     This layout is a two-pane layout for the Artists
@@ -21,6 +18,11 @@
         android:layout_height="match_parent"
         android:layout_weight="1"
         tools:layout="@layout/fragment_searchable" />
+
+    <View
+        android:layout_width="1dp"
+        android:layout_height="wrap_content"
+        android:background="#000000" />
 
     <FrameLayout
         android:id="@+id/track_list"

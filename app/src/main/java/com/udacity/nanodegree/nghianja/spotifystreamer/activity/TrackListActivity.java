@@ -2,7 +2,6 @@ package com.udacity.nanodegree.nghianja.spotifystreamer.activity;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -27,10 +26,7 @@ public class TrackListActivity extends Activity {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 
-        if (getResources().getConfiguration().orientation
-                == Configuration.ORIENTATION_LANDSCAPE) {
-            // If the screen is now in landscape mode, we can show the
-            // dialog in-line with the list so we don't need this activity.
+        if (getResources().getBoolean(R.bool.has_two_panes)) {
             finish();
             return;
         }

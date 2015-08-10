@@ -5,7 +5,6 @@ import android.app.DialogFragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.app.ListFragment;
-import android.content.res.Configuration;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -130,8 +129,7 @@ public class TrackListFragment extends ListFragment {
         FragmentManager fragmentManager = getFragmentManager();
         DialogFragment newFragment = PlayerFragment.newInstance(index, tracks);
 
-        if (getResources().getConfiguration().orientation
-                == Configuration.ORIENTATION_LANDSCAPE) {
+        if (getResources().getBoolean(R.bool.has_two_panes)) {
             newFragment.show(fragmentManager, "dialog");
         } else {
             FragmentTransaction transaction = fragmentManager.beginTransaction();

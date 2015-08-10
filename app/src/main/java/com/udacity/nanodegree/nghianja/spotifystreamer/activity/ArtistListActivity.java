@@ -35,7 +35,7 @@ public class ArtistListActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
-        setContentView(R.layout.activity_artist_list);
+        setContentView(R.layout.alias_artist_list);
 
         if (getIntent() != null) {
             handleIntent(getIntent());

@@ -83,10 +83,9 @@ public class ArtistListFragment extends ListFragment {
         adapter = new ArtistArrayAdapter(getActivity(), artists);
         setListAdapter(adapter);
 
-        // Check to see if we have a frame in which to embed the details
-        // fragment directly in the containing UI.
-        View tracksFrame = getActivity().findViewById(R.id.tracks);
-        dualPane = tracksFrame != null && tracksFrame.getVisibility() == View.VISIBLE;
+        // View tracksFrame = getActivity().findViewById(R.id.tracks);
+        // dualPane = tracksFrame != null && tracksFrame.getVisibility() == View.VISIBLE;
+        dualPane = getResources().getBoolean(R.bool.has_two_panes);
 
         if (savedInstanceState != null) {
             // Restore last state for checked position.
@@ -123,7 +122,7 @@ public class ArtistListFragment extends ListFragment {
 
         if (dualPane) {
             // Check what fragment is currently shown, replace if needed.
-            tracksFragment = (TrackListFragment) getFragmentManager().findFragmentById(R.id.tracks);
+            tracksFragment = (TrackListFragment) getFragmentManager().findFragmentById(R.id.track_list);
             if (tracksFragment == null) {
                 // Make new fragment to show this selection.
                 tracksFragment = TrackListFragment.newInstance(index, artist);
@@ -132,7 +131,7 @@ public class ArtistListFragment extends ListFragment {
                 // with this one inside the frame.
                 FragmentTransaction transaction = getFragmentManager().beginTransaction();
                 transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
-                transaction.replace(R.id.tracks, tracksFragment);
+                transaction.replace(R.id.track_list, tracksFragment);
                 transaction.commit();
             } else {
                 tracksFragment.setArguments(index, artist);
