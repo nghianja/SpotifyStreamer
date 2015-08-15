@@ -2,11 +2,15 @@ package com.udacity.nanodegree.nghianja.spotifystreamer.fragment;
 
 import android.app.Dialog;
 import android.app.DialogFragment;
-import android.media.AudioManager;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,10 +29,10 @@ import com.udacity.nanodegree.nghianja.spotifystreamer.SpotifyStreamerApp;
 import com.udacity.nanodegree.nghianja.spotifystreamer.event.PlayerCompletionEvent;
 import com.udacity.nanodegree.nghianja.spotifystreamer.event.PlayerPreparedEvent;
 import com.udacity.nanodegree.nghianja.spotifystreamer.event.SeekBarChangeEvent;
-import com.udacity.nanodegree.nghianja.spotifystreamer.listener.PlayerCompletionListener;
-import com.udacity.nanodegree.nghianja.spotifystreamer.listener.PlayerPreparedListener;
 import com.udacity.nanodegree.nghianja.spotifystreamer.listener.SeekBarChangeListener;
 import com.udacity.nanodegree.nghianja.spotifystreamer.parcelable.TrackParcelable;
+import com.udacity.nanodegree.nghianja.spotifystreamer.service.PlayerService;
+import com.udacity.nanodegree.nghianja.spotifystreamer.service.PlayerService.PlayerBinder;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -50,6 +54,8 @@ import java.util.concurrent.TimeUnit;
 public class PlayerFragment extends DialogFragment {
 
     private static final String TAG = "PlayerFragment";
+    private boolean isPrepared = false;
+    private boolean bound = false;
     private long durationMM;
     private long durationSS;
     private TextView playArtist;
@@ -62,6 +68,7 @@ public class PlayerFragment extends DialogFragment {
     private ImageButton playPrevious;
     private ImageButton playPause;
     private ImageButton playNext;
+    private PlayerService service;
     private MediaPlayer mediaPlayer;
     private Handler seekHandler;
     private Runnable runnable = new Runnable() {
@@ -70,7 +77,39 @@ public class PlayerFragment extends DialogFragment {
             updateSeekBar();
         }
     };
-    private boolean isPrepared = false;
+
+    /** Defines callbacks for service binding, passed to bindService() */
+    private ServiceConnection connection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName className, IBinder iBinder) {
+            PlayerBinder binder = (PlayerBinder) iBinder;
+            service = binder.getService();
+            bound = true;
+            mediaPlayer = service.getMediaPlayer();
+            if (service.getDataSource().equals(getTrack().getPreviewUrl())) {
+                isPrepared = true;
+                durationMM = TimeUnit.MILLISECONDS.toMinutes(mediaPlayer.getDuration());
+                durationSS = TimeUnit.MILLISECONDS.toSeconds(mediaPlayer.getDuration()) % TimeUnit.MINUTES.toSeconds(1);
+                playSeeker.setMax(mediaPlayer.getDuration());
+                playEnd.setText(String.format("%01d:%02d",
+                        TimeUnit.MILLISECONDS.toMinutes(mediaPlayer.getDuration()),
+                        TimeUnit.MILLISECONDS.toSeconds(mediaPlayer.getDuration()) % TimeUnit.MINUTES.toSeconds(1)));
+                updateSeekBar();
+                if (mediaPlayer.isPlaying()) {
+                    playPause.setImageResource(android.R.drawable.ic_media_pause);
+                } else {
+                    playPause.performClick();
+                }
+            } else {
+                preparePlayer();
+            }
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            bound = false;
+        }
+    };
 
     public static PlayerFragment newInstance(int index, ArrayList<TrackParcelable> tracks) {
         PlayerFragment f = new PlayerFragment();
@@ -175,9 +214,7 @@ public class PlayerFragment extends DialogFragment {
         return v;
     }
 
-    /**
-     * The system calls this only when creating the layout in a dialog.
-     */
+    /** The system calls this only when creating the layout in a dialog. */
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         // The only reason you might override this method when using onCreateView() is
@@ -192,11 +229,9 @@ public class PlayerFragment extends DialogFragment {
     @Override
     public void onStart() {
         super.onStart();
-        mediaPlayer = new MediaPlayer();
-        mediaPlayer.setOnPreparedListener(new PlayerPreparedListener());
-        mediaPlayer.setOnCompletionListener(new PlayerCompletionListener());
-        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-        preparePlayer();
+        // Bind to PlayerService
+        Intent intent = new Intent(getActivity(), PlayerService.class);
+        getActivity().bindService(intent, connection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
@@ -216,8 +251,11 @@ public class PlayerFragment extends DialogFragment {
     @Override
     public void onStop() {
         super.onStop();
-        mediaPlayer.release();
-        mediaPlayer = null;
+        // Unbind from the service
+        if (bound) {
+            getActivity().unbindService(connection);
+            bound = false;
+        }
     }
 
     public void updateViews() {
@@ -248,7 +286,8 @@ public class PlayerFragment extends DialogFragment {
     public void preparePlayer() {
         try {
             isPrepared = false;
-            Log.d(TAG, "previewUrl=" + getTrack().getPreviewUrl());
+            service.setDataSource(getTrack().getPreviewUrl());
+            mediaPlayer.reset();
             mediaPlayer.setDataSource(getTrack().getPreviewUrl());
             mediaPlayer.prepareAsync();
         } catch (IOException e) {
@@ -259,20 +298,19 @@ public class PlayerFragment extends DialogFragment {
 
     public void changeTrack() {
         seekHandler.removeCallbacks(runnable);
-        mediaPlayer.reset();
-        updateViews();
         preparePlayer();
+        updateViews();
     }
 
     @Subscribe
     public void onPrepared(PlayerPreparedEvent event) {
         isPrepared = true;
-        playSeeker.setMax(event.getDuration());
-        playEnd.setText(event.getEndText());
-        Toast.makeText(getActivity(), event.getEndText() + " preview loaded", Toast.LENGTH_SHORT).show();
         durationMM = TimeUnit.MILLISECONDS.toMinutes(event.getDuration());
         durationSS = TimeUnit.MILLISECONDS.toSeconds(event.getDuration()) % TimeUnit.MINUTES.toSeconds(1);
+        playSeeker.setMax(event.getDuration());
+        playEnd.setText(event.getEndText());
         updateSeekBar();
+        playPause.performClick();
     }
 
     @Subscribe

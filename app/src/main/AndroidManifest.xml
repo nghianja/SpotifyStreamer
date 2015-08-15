@@ -37,6 +37,11 @@
         <activity
             android:name=".activity.SettingsActivity"
             android:label="@string/title_activity_settings" />
+
+        <service
+            android:name=".service.PlayerService"
+            android:icon="@mipmap/ic_spotifier"
+            android:label="@string/title_service_player" />
     </application>
 
 </manifest>

@@ -3,6 +3,7 @@ package com.udacity.nanodegree.nghianja.spotifystreamer;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -10,6 +11,7 @@ import android.preference.PreferenceManager;
 
 import com.squareup.otto.Bus;
 import com.udacity.nanodegree.nghianja.spotifystreamer.fragment.SettingsFragment;
+import com.udacity.nanodegree.nghianja.spotifystreamer.service.PlayerService;
 
 /**
  * Class for global variables.
@@ -19,7 +21,7 @@ import com.udacity.nanodegree.nghianja.spotifystreamer.fragment.SettingsFragment
  */
 public class SpotifyStreamerApp extends Application {
 
-    public static Bus bus = new Bus();
+    public static Bus bus = new Bus(/* ThreadEnforcer.ANY */);
 
     public static boolean isNetworkAvailable(Activity activity) {
         ConnectivityManager connectivityManager
@@ -35,6 +37,13 @@ public class SpotifyStreamerApp extends Application {
             country = activity.getResources().getConfiguration().locale.getCountry();
         }
         return country;
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        Intent intent = new Intent(this, PlayerService.class);
+        startService(intent);
     }
 
 }
