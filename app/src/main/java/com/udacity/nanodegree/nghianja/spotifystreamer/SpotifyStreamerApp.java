@@ -22,6 +22,7 @@ import com.udacity.nanodegree.nghianja.spotifystreamer.service.PlayerService;
 public class SpotifyStreamerApp extends Application {
 
     public static Bus bus = new Bus(/* ThreadEnforcer.ANY */);
+    public static boolean playerShown = false;
 
     public static boolean isNetworkAvailable(Activity activity) {
         ConnectivityManager connectivityManager

@@ -110,7 +110,10 @@ public class TrackListFragment extends ListFragment {
 
         adapter = new TrackArrayAdapter(getActivity(), tracks);
         setListAdapter(adapter);
-        getArtistTopTrack(getActivity());
+
+        if (savedInstanceState == null) {
+            getArtistTopTrack(getActivity());
+        }
     }
 
     @Override
@@ -136,6 +139,7 @@ public class TrackListFragment extends ListFragment {
             // For a little polish, specify a transition animation
             transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
             transaction.add(android.R.id.content, newFragment).addToBackStack(null).commit();
+            SpotifyStreamerApp.playerShown = true;
         }
     }
 
