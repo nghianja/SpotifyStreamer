@@ -8,6 +8,9 @@ import android.app.ListFragment;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
@@ -19,6 +22,8 @@ import com.udacity.nanodegree.nghianja.spotifystreamer.SpotifyStreamerApp;
 import com.udacity.nanodegree.nghianja.spotifystreamer.adapter.TrackArrayAdapter;
 import com.udacity.nanodegree.nghianja.spotifystreamer.event.ChangeSettingsEvent;
 import com.udacity.nanodegree.nghianja.spotifystreamer.event.GetArtistTopTrackEvent;
+import com.udacity.nanodegree.nghianja.spotifystreamer.event.PlayerCompletionEvent;
+import com.udacity.nanodegree.nghianja.spotifystreamer.event.PlayerPreparedEvent;
 import com.udacity.nanodegree.nghianja.spotifystreamer.parcelable.ArtistParcelable;
 import com.udacity.nanodegree.nghianja.spotifystreamer.parcelable.TrackParcelable;
 import com.udacity.nanodegree.nghianja.spotifystreamer.task.GetArtistTopTrackTask;
@@ -40,12 +45,14 @@ import kaaes.spotify.webapi.android.models.Tracks;
  * [3] http://stackoverflow.com/questions/10463560/retaining-list-in-list-fragment-on-orientation-change
  * [4] http://stackoverflow.com/questions/14835828/keep-list-fragment-selected-item-position-on-orientation-change
  * [5] http://stackoverflow.com/questions/11457027/dialogfragment-fill-screen-on-phone
+ * [6] http://www.grokkingandroid.com/adding-action-items-from-within-fragments/
  */
 public class TrackListFragment extends ListFragment {
 
     private static final String TAG = "TrackListFragment";
     private ArrayList<TrackParcelable> tracks;
     private TrackArrayAdapter adapter;
+    private Menu menu;
 
     /**
      * Create a new instance of DetailsFragment, initialized to
@@ -82,6 +89,7 @@ public class TrackListFragment extends ListFragment {
         super.onCreate(savedInstanceState);
         // setRetainInstance(true);
         SpotifyStreamerApp.bus.register(this);
+        setHasOptionsMenu(true);
     }
 
     @Override
@@ -117,6 +125,11 @@ public class TrackListFragment extends ListFragment {
     }
 
     @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        this.menu = menu;
+    }
+
+    @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putParcelableArrayList("tracks", tracks);
@@ -139,7 +152,15 @@ public class TrackListFragment extends ListFragment {
             // For a little polish, specify a transition animation
             transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
             transaction.add(android.R.id.content, newFragment).addToBackStack(null).commit();
-            SpotifyStreamerApp.playerShown = true;
+        }
+    }
+
+    public void showActionButton() {
+        if (menu != null) {
+            Log.d(TAG, getString(R.string.now_playing));
+            MenuItem item = menu.add(Menu.NONE, R.id.now_playing, 10, R.string.now_playing);
+            item.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+            item.setIcon(android.R.drawable.ic_media_play);
         }
     }
 
@@ -223,6 +244,18 @@ public class TrackListFragment extends ListFragment {
         if (event.getKey().equals(SettingsFragment.KEY_PREF_COUNTRY)) {
             Toast.makeText(getActivity(), "Refreshing top tracks...", Toast.LENGTH_SHORT).show();
             getArtistTopTrack(getActivity());
+        }
+    }
+
+    @Subscribe
+    public void onPrepared(PlayerPreparedEvent event) {
+        showActionButton();
+    }
+
+    @Subscribe
+    public void onCompletion(PlayerCompletionEvent event) {
+        if (menu != null) {
+            menu.removeItem(R.id.now_playing);
         }
     }
 

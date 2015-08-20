@@ -9,7 +9,6 @@ import android.view.MenuItem;
 import android.view.Window;
 
 import com.udacity.nanodegree.nghianja.spotifystreamer.R;
-import com.udacity.nanodegree.nghianja.spotifystreamer.SpotifyStreamerApp;
 import com.udacity.nanodegree.nghianja.spotifystreamer.fragment.TrackListFragment;
 
 /**
@@ -59,19 +58,14 @@ public class TrackListActivity extends Activity {
         switch (item.getItemId()) {
             // Respond to the action bar's Up/Home button
             case android.R.id.home:
-                if (SpotifyStreamerApp.playerShown) {
-                    SpotifyStreamerApp.playerShown = false;
-                    onBackPressed();
-                } else {
-                    finish();
-                }
+                onBackPressed();
                 return true;
             case R.id.action_settings:
-            Intent intent = new Intent(this, SettingsActivity.class);
-            startActivity(intent);
-            return true;
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
+                return true;
         }
-            return super.onOptionsItemSelected(item);
+        return super.onOptionsItemSelected(item);
     }
 
 }
