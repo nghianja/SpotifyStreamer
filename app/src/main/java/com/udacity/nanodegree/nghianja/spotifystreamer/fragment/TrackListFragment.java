@@ -53,6 +53,7 @@ public class TrackListFragment extends ListFragment {
     private ArrayList<TrackParcelable> tracks;
     private TrackArrayAdapter adapter;
     private Menu menu;
+    private boolean nowPlaying = false;
 
     /**
      * Create a new instance of DetailsFragment, initialized to

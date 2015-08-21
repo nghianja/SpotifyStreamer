@@ -54,7 +54,6 @@ import java.util.concurrent.TimeUnit;
 public class PlayerFragment extends DialogFragment {
 
     private static final String TAG = "PlayerFragment";
-    private boolean isPrepared = false;
     private boolean bound = false;
     private long durationMM;
     private long durationSS;
@@ -87,17 +86,12 @@ public class PlayerFragment extends DialogFragment {
             bound = true;
             mediaPlayer = service.getMediaPlayer();
             if (service.getDataSource().equals(getTrack().getPreviewUrl())) {
-                isPrepared = true;
-                durationMM = TimeUnit.MILLISECONDS.toMinutes(mediaPlayer.getDuration());
-                durationSS = TimeUnit.MILLISECONDS.toSeconds(mediaPlayer.getDuration()) % TimeUnit.MINUTES.toSeconds(1);
-                playSeeker.setMax(mediaPlayer.getDuration());
-                playEnd.setText(String.format("%01d:%02d",
+                initViews();
+                updateViews(mediaPlayer.getDuration(), String.format("%01d:%02d",
                         TimeUnit.MILLISECONDS.toMinutes(mediaPlayer.getDuration()),
                         TimeUnit.MILLISECONDS.toSeconds(mediaPlayer.getDuration()) % TimeUnit.MINUTES.toSeconds(1)));
                 updateSeekBar();
-                if (mediaPlayer.isPlaying()) {
-                    playPause.setImageResource(android.R.drawable.ic_media_pause);
-                } else {
+                if (!mediaPlayer.isPlaying()) {
                     playPause.performClick();
                 }
             } else {
@@ -183,13 +177,11 @@ public class PlayerFragment extends DialogFragment {
         playPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (isPrepared) {
+                if (service.isPrepared()) {
                     if (mediaPlayer.isPlaying()) {
                         mediaPlayer.pause();
-                        playPause.setImageResource(android.R.drawable.ic_media_play);
                     } else {
                         mediaPlayer.start();
-                        playPause.setImageResource(android.R.drawable.ic_media_pause);
                     }
                 } else {
                     Toast.makeText(getActivity(), "preview not loaded yet", Toast.LENGTH_SHORT).show();
@@ -209,7 +201,7 @@ public class PlayerFragment extends DialogFragment {
                 changeTrack();
             }
         });
-        updateViews();
+        initViews();
 
         return v;
     }
@@ -258,7 +250,7 @@ public class PlayerFragment extends DialogFragment {
         }
     }
 
-    public void updateViews() {
+    public void initViews() {
         TrackParcelable track = getTrack();
 
         playArtist.setText(track.getArtistName());
@@ -273,6 +265,13 @@ public class PlayerFragment extends DialogFragment {
         playPause.setImageResource(android.R.drawable.ic_media_play);
     }
 
+    public void updateViews(int duration, String endText) {
+        durationMM = TimeUnit.MILLISECONDS.toMinutes(duration);
+        durationSS = TimeUnit.MILLISECONDS.toSeconds(duration) % TimeUnit.MINUTES.toSeconds(1);
+        playSeeker.setMax(duration);
+        playEnd.setText(endText);
+    }
+
     public void updateSeekBar() {
         int currentPosition = mediaPlayer.getCurrentPosition();
         long currentMM = TimeUnit.MILLISECONDS.toMinutes(currentPosition);
@@ -280,16 +279,17 @@ public class PlayerFragment extends DialogFragment {
         playSeeker.setProgress(currentPosition);
         playStart.setText(String.format("%01d:%02d", currentMM, currentSS));
         playEnd.setText(String.format("%01d:%02d", durationMM - currentMM, durationSS - currentSS));
+        if (mediaPlayer.isPlaying()) {
+            playPause.setImageResource(android.R.drawable.ic_media_pause);
+        } else {
+            playPause.setImageResource(android.R.drawable.ic_media_play);
+        }
         seekHandler.postDelayed(runnable, 100);
     }
 
     public void preparePlayer() {
         try {
-            isPrepared = false;
-            service.setDataSource(getTrack().getPreviewUrl());
-            mediaPlayer.reset();
-            mediaPlayer.setDataSource(getTrack().getPreviewUrl());
-            mediaPlayer.prepareAsync();
+            service.preparePlayer(getTrack().getPreviewUrl());
         } catch (IOException e) {
             Log.e(TAG, e.toString());
             Toast.makeText(getActivity(), getResources().getString(R.string.no_preview), Toast.LENGTH_SHORT).show();
@@ -299,18 +299,13 @@ public class PlayerFragment extends DialogFragment {
     public void changeTrack() {
         seekHandler.removeCallbacks(runnable);
         preparePlayer();
-        updateViews();
+        initViews();
     }
 
     @Subscribe
     public void onPrepared(PlayerPreparedEvent event) {
-        isPrepared = true;
-        durationMM = TimeUnit.MILLISECONDS.toMinutes(event.getDuration());
-        durationSS = TimeUnit.MILLISECONDS.toSeconds(event.getDuration()) % TimeUnit.MINUTES.toSeconds(1);
-        playSeeker.setMax(event.getDuration());
-        playEnd.setText(event.getEndText());
+        updateViews(event.getDuration(), event.getEndText());
         updateSeekBar();
-        playPause.performClick();
     }
 
     @Subscribe

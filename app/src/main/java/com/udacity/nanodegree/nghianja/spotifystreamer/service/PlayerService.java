@@ -7,8 +7,13 @@ import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
 
+import com.squareup.otto.Subscribe;
+import com.udacity.nanodegree.nghianja.spotifystreamer.SpotifyStreamerApp;
+import com.udacity.nanodegree.nghianja.spotifystreamer.event.PlayerPreparedEvent;
 import com.udacity.nanodegree.nghianja.spotifystreamer.listener.PlayerCompletionListener;
 import com.udacity.nanodegree.nghianja.spotifystreamer.listener.PlayerPreparedListener;
+
+import java.io.IOException;
 
 /**
  * Implementation of Service for playing media asynchronously.
@@ -25,7 +30,8 @@ public class PlayerService extends Service {
     // Binder given to clients
     private final IBinder binder = new PlayerBinder();
 
-    private String dataSource = "";
+    private boolean isPrepared = false;
+    private String dataSource;
     private MediaPlayer mediaPlayer;
 
     /**
@@ -54,31 +60,48 @@ public class PlayerService extends Service {
 
     @Override
     public void onCreate() {
-        // SpotifyStreamerApp.bus.register(this);
+        SpotifyStreamerApp.bus.register(this);
         mediaPlayer = new MediaPlayer();
     }
 
     @Override
     public void onDestroy() {
-        // SpotifyStreamerApp.bus.unregister(this);
+        SpotifyStreamerApp.bus.unregister(this);
         if (mediaPlayer != null) mediaPlayer.release();
     }
 
-    /*
     @Subscribe
-    public void onPrepared(PlayerPreparedEvent event) {}
+    public void onPrepared(PlayerPreparedEvent event) {
+        isPrepared = true;
+        mediaPlayer.start();
+    }
 
+    /*
     @Subscribe
     public void onCompletion(PlayerCompletionEvent event) {}
     */
 
     /** methods for clients */
-    public void setDataSource(String dataSource) { this.dataSource = dataSource; }
-
-    public String getDataSource() { return dataSource; }
-
-    public MediaPlayer getMediaPlayer() {
-        return mediaPlayer;
+    public void preparePlayer(String dataSource) throws IOException {
+        isPrepared = false;
+        mediaPlayer.reset();
+        mediaPlayer.setDataSource(dataSource);
+        mediaPlayer.prepareAsync();
+        this.dataSource = dataSource;
     }
+
+    public boolean isPrepared() {
+        return isPrepared;
+    }
+
+    public String getDataSource() {
+        if (isPrepared) {
+            return dataSource;
+        } else {
+            return "";
+        }
+    }
+
+    public MediaPlayer getMediaPlayer() { return mediaPlayer; }
 
 }
