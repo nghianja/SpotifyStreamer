@@ -21,6 +21,8 @@ public class TrackListActivity extends Activity {
     private static final String TAG = "TrackListActivity";
     private TrackListFragment trackFragment;
     private String artistId;
+    private Menu menu;
+    private boolean nowPlaying = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +52,7 @@ public class TrackListActivity extends Activity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_track, menu);
+        this.menu = menu;
         return true;
     }
 
@@ -66,6 +69,21 @@ public class TrackListActivity extends Activity {
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public void addNowPlaying() {
+        if (menu != null) {
+            Log.d(TAG, getString(R.string.now_playing));
+            MenuItem item = menu.add(Menu.NONE, R.id.now_playing, 10, R.string.now_playing);
+            item.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+            item.setIcon(android.R.drawable.ic_media_play);
+        }
+    }
+
+    public void removeNowPlaying() {
+        if (menu != null) {
+            menu.removeItem(R.id.now_playing);
+        }
     }
 
 }

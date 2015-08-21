@@ -11,7 +11,10 @@ import android.preference.PreferenceManager;
 
 import com.squareup.otto.Bus;
 import com.udacity.nanodegree.nghianja.spotifystreamer.fragment.SettingsFragment;
+import com.udacity.nanodegree.nghianja.spotifystreamer.parcelable.TrackParcelable;
 import com.udacity.nanodegree.nghianja.spotifystreamer.service.PlayerService;
+
+import java.util.ArrayList;
 
 /**
  * Class for global variables.
@@ -22,6 +25,8 @@ import com.udacity.nanodegree.nghianja.spotifystreamer.service.PlayerService;
 public class SpotifyStreamerApp extends Application {
 
     public static Bus bus = new Bus(/* ThreadEnforcer.ANY */);
+    public static ArrayList<TrackParcelable> tracks = null;
+    public static int index = 0;
 
     public static boolean isNetworkAvailable(Activity activity) {
         ConnectivityManager connectivityManager
