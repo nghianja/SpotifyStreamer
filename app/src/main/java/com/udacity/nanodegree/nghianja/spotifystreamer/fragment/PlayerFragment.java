@@ -26,7 +26,7 @@ import com.squareup.otto.Subscribe;
 import com.squareup.picasso.Picasso;
 import com.udacity.nanodegree.nghianja.spotifystreamer.R;
 import com.udacity.nanodegree.nghianja.spotifystreamer.SpotifyStreamerApp;
-import com.udacity.nanodegree.nghianja.spotifystreamer.event.PlayerCompletionEvent;
+import com.udacity.nanodegree.nghianja.spotifystreamer.event.NowPlayingEvent;
 import com.udacity.nanodegree.nghianja.spotifystreamer.event.PlayerPreparedEvent;
 import com.udacity.nanodegree.nghianja.spotifystreamer.event.SeekBarChangeEvent;
 import com.udacity.nanodegree.nghianja.spotifystreamer.listener.SeekBarChangeListener;
@@ -113,6 +113,10 @@ public class PlayerFragment extends DialogFragment {
         args.putInt("index", index);
         args.putParcelableArrayList("tracks", tracks);
         f.setArguments(args);
+
+        // Set values to global variables.
+        SpotifyStreamerApp.index = index;
+        SpotifyStreamerApp.tracks = tracks;
 
         return f;
     }
@@ -250,6 +254,13 @@ public class PlayerFragment extends DialogFragment {
         }
     }
 
+    @Override
+    public void onDetach() {
+        Log.d(TAG, "onDetach called");
+        SpotifyStreamerApp.bus.post(new NowPlayingEvent(NowPlayingEvent.Action.ADD));
+        super.onDetach();
+    }
+
     public void initViews() {
         TrackParcelable track = getTrack();
 
@@ -306,13 +317,6 @@ public class PlayerFragment extends DialogFragment {
     public void onPrepared(PlayerPreparedEvent event) {
         updateViews(event.getDuration(), event.getEndText());
         updateSeekBar();
-    }
-
-    @Subscribe
-    public void onCompletion(PlayerCompletionEvent event) {
-        if (!event.isLooping()) {
-            playPause.setImageResource(android.R.drawable.ic_media_play);
-        }
     }
 
     @Subscribe

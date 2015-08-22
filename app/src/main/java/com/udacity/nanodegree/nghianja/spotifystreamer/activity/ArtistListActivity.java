@@ -12,8 +12,10 @@ import android.view.Window;
 import android.widget.SearchView;
 import android.widget.Toast;
 
+import com.squareup.otto.Subscribe;
 import com.udacity.nanodegree.nghianja.spotifystreamer.R;
 import com.udacity.nanodegree.nghianja.spotifystreamer.SpotifyStreamerApp;
+import com.udacity.nanodegree.nghianja.spotifystreamer.event.NowPlayingEvent;
 import com.udacity.nanodegree.nghianja.spotifystreamer.task.SearchArtistTask;
 
 /**
@@ -29,10 +31,12 @@ public class ArtistListActivity extends Activity {
 
     private static final String TAG = "ArtistListActivity";
     private MenuItem searchMenuItem;
+    private Menu menu;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        SpotifyStreamerApp.bus.register(this);
 
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         setContentView(R.layout.alias_artist_list);
@@ -40,6 +44,12 @@ public class ArtistListActivity extends Activity {
         if (getIntent() != null) {
             handleIntent(getIntent());
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+            SpotifyStreamerApp.bus.unregister(this);
+        super.onDestroy();
     }
 
     @Override
@@ -84,6 +94,11 @@ public class ArtistListActivity extends Activity {
         // Assumes current activity is the searchable activity
         searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
 
+        if (SpotifyStreamerApp.nowPlaying) {
+            SpotifyStreamerApp.addNowPlaying(menu);
+        }
+
+        this.menu = menu;
         return true;
     }
 
@@ -94,14 +109,27 @@ public class ArtistListActivity extends Activity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.now_playing) {
+            SpotifyStreamerApp.showPlayer(this);
+            SpotifyStreamerApp.removeNowPlaying(menu);
+            SpotifyStreamerApp.nowPlaying = false;
+            return true;
+        } else if (id == R.id.action_settings) {
             Intent intent = new Intent(this, SettingsActivity.class);
             startActivity(intent);
             return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Subscribe
+    public void onPlayerFragmentDetach(NowPlayingEvent event) {
+        Log.d(TAG, "event.getAction=" + event.getAction());
+        if (event.getAction() == NowPlayingEvent.Action.ADD) {
+            SpotifyStreamerApp.addNowPlaying(menu);
+            SpotifyStreamerApp.nowPlaying = true;
+        }
     }
 
 }

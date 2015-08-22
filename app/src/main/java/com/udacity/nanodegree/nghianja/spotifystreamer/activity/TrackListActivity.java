@@ -8,7 +8,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.Window;
 
+import com.squareup.otto.Subscribe;
 import com.udacity.nanodegree.nghianja.spotifystreamer.R;
+import com.udacity.nanodegree.nghianja.spotifystreamer.SpotifyStreamerApp;
+import com.udacity.nanodegree.nghianja.spotifystreamer.event.NowPlayingEvent;
 import com.udacity.nanodegree.nghianja.spotifystreamer.fragment.TrackListFragment;
 
 /**
@@ -22,11 +25,12 @@ public class TrackListActivity extends Activity {
     private TrackListFragment trackFragment;
     private String artistId;
     private Menu menu;
-    private boolean nowPlaying = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        SpotifyStreamerApp.bus.register(this);
+
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         getActionBar().setDisplayHomeAsUpEnabled(true);
 
@@ -49,9 +53,20 @@ public class TrackListActivity extends Activity {
     }
 
     @Override
+    protected void onDestroy() {
+        SpotifyStreamerApp.bus.unregister(this);
+        super.onDestroy();
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_track, menu);
+
+        if (SpotifyStreamerApp.nowPlaying) {
+            SpotifyStreamerApp.addNowPlaying(menu);
+        }
+
         this.menu = menu;
         return true;
     }
@@ -63,6 +78,11 @@ public class TrackListActivity extends Activity {
             case android.R.id.home:
                 onBackPressed();
                 return true;
+            case R.id.now_playing:
+                SpotifyStreamerApp.showPlayer(this);
+                SpotifyStreamerApp.removeNowPlaying(menu);
+                SpotifyStreamerApp.nowPlaying = false;
+                return true;
             case R.id.action_settings:
                 Intent intent = new Intent(this, SettingsActivity.class);
                 startActivity(intent);
@@ -71,18 +91,12 @@ public class TrackListActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
-    public void addNowPlaying() {
-        if (menu != null) {
-            Log.d(TAG, getString(R.string.now_playing));
-            MenuItem item = menu.add(Menu.NONE, R.id.now_playing, 10, R.string.now_playing);
-            item.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-            item.setIcon(android.R.drawable.ic_media_play);
-        }
-    }
-
-    public void removeNowPlaying() {
-        if (menu != null) {
-            menu.removeItem(R.id.now_playing);
+    @Subscribe
+    public void onPlayerFragmentDetach(NowPlayingEvent event) {
+        Log.d(TAG, "event.getAction=" + event.getAction());
+        if (event.getAction() == NowPlayingEvent.Action.ADD) {
+            SpotifyStreamerApp.addNowPlaying(menu);
+            SpotifyStreamerApp.nowPlaying = true;
         }
     }
 

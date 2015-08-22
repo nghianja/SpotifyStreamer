@@ -83,7 +83,6 @@ public class TrackListFragment extends ListFragment {
         super.onCreate(savedInstanceState);
         // setRetainInstance(true);
         SpotifyStreamerApp.bus.register(this);
-        setHasOptionsMenu(true);
     }
 
     @Override
