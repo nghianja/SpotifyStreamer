@@ -146,7 +146,7 @@ public class TrackListFragment extends ListFragment {
     public void getArtistTopTrack(Activity activity) {
         if (getArtist().getId() != null && !getArtist().getId().equals("")) {
             if (SpotifyStreamerApp.isNetworkAvailable(activity)) {
-                getActivity().getActionBar().setSubtitle(getArtist().getName());
+                activity.getActionBar().setSubtitle(getArtist().getName());
                 activity.setProgressBarIndeterminateVisibility(true);
                 GetArtistTopTrackTask task = new GetArtistTopTrackTask();
                 task.execute(getArtist().getId(), SpotifyStreamerApp.getCountryCode(activity));
@@ -220,7 +220,7 @@ public class TrackListFragment extends ListFragment {
 
     @Subscribe
     public void onSettingsChanged(ChangeSettingsEvent event) {
-        if (event.getKey().equals(SettingsFragment.KEY_PREF_COUNTRY)) {
+        if (event.getKey().equals(getString(R.string.pref_key_country))) {
             Toast.makeText(getActivity(), "Refreshing top tracks...", Toast.LENGTH_SHORT).show();
             getArtistTopTrack(getActivity());
         }

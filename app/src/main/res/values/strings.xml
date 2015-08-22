@@ -10,9 +10,12 @@
     <string name="no_network">Network is unavailable</string>
     <string name="no_preview">Unable to get song preview</string>
     <string name="connection_error">Error connecting to internet!</string>
-    <string name="pref_key">pref_country</string>
-    <string name="pref_summary">Specify the country code for searching artist\'s top tracks</string>
-    <string name="pref_title">Country Code</string>
+    <string name="pref_key_country">pref_country</string>
+    <string name="pref_summary_country">Specify the country code for searching artist\'s top tracks</string>
+    <string name="pref_title_country">Country Code</string>
+    <string name="pref_key_notification">pref_notification</string>
+    <string name="pref_summary_notification">Show notification controls on the drawer and lock screen</string>
+    <string name="pref_title_notification">Notification Controls</string>
     <string name="title_activity_artists">Spotify Artists</string>
     <string name="title_activity_tracks">Top 10 Tracks</string>
     <string name="title_activity_settings">Settings</string>

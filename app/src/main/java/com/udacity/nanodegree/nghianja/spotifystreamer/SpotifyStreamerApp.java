@@ -16,7 +16,6 @@ import android.view.MenuItem;
 
 import com.squareup.otto.Bus;
 import com.udacity.nanodegree.nghianja.spotifystreamer.fragment.PlayerFragment;
-import com.udacity.nanodegree.nghianja.spotifystreamer.fragment.SettingsFragment;
 import com.udacity.nanodegree.nghianja.spotifystreamer.parcelable.TrackParcelable;
 import com.udacity.nanodegree.nghianja.spotifystreamer.service.PlayerService;
 
@@ -44,7 +43,7 @@ public class SpotifyStreamerApp extends Application {
 
     public static String getCountryCode(Activity activity) {
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(activity);
-        String country = sharedPref.getString(SettingsFragment.KEY_PREF_COUNTRY, "");
+        String country = sharedPref.getString(activity.getString(R.string.pref_key_country), "");
         if (country.equals("")) {
             country = activity.getResources().getConfiguration().locale.getCountry();
         }

@@ -15,7 +15,8 @@ import com.udacity.nanodegree.nghianja.spotifystreamer.R;
  * [1] http://stackoverflow.com/questions/13596250/how-to-listen-for-preference-changes-within-a-preferencefragment
  */
 public class SettingsFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
-    public static final String KEY_PREF_COUNTRY = "pref_country";
+
+    private static final String TAG = "SettingsFragment";
     private OnSettingsChangedListener listener;
 
     // Container Activity must implement this interface
@@ -55,7 +56,7 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
     }
 
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        if (key.equals(KEY_PREF_COUNTRY)) {
+        if (key.equals(getString(R.string.pref_key_country))) {
             Preference connectionPref = findPreference(key);
             String country = sharedPreferences.getString(key, "");
             if (country.equals("")) {
@@ -66,4 +67,5 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         }
         listener.onSettingsChanged(key);
     }
+
 }
