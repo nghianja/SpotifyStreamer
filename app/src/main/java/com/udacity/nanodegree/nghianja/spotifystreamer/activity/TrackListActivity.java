@@ -7,11 +7,13 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.Window;
+import android.widget.ShareActionProvider;
 
 import com.squareup.otto.Subscribe;
 import com.udacity.nanodegree.nghianja.spotifystreamer.R;
 import com.udacity.nanodegree.nghianja.spotifystreamer.SpotifyStreamerApp;
 import com.udacity.nanodegree.nghianja.spotifystreamer.event.NowPlayingEvent;
+import com.udacity.nanodegree.nghianja.spotifystreamer.event.PlayerPreparedEvent;
 import com.udacity.nanodegree.nghianja.spotifystreamer.fragment.TrackListFragment;
 
 /**
@@ -25,6 +27,7 @@ public class TrackListActivity extends Activity {
     private TrackListFragment trackFragment;
     private String artistId;
     private Menu menu;
+    private ShareActionProvider shareActionProvider;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +66,10 @@ public class TrackListActivity extends Activity {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_track, menu);
 
+        MenuItem item = menu.findItem(R.id.share);
+        shareActionProvider = (ShareActionProvider) item.getActionProvider();
+        shareActionProvider.setShareIntent(SpotifyStreamerApp.getShareIntent());
+
         if (SpotifyStreamerApp.nowPlaying) {
             SpotifyStreamerApp.addNowPlaying(menu);
         }
@@ -98,6 +105,11 @@ public class TrackListActivity extends Activity {
             SpotifyStreamerApp.addNowPlaying(menu);
             SpotifyStreamerApp.nowPlaying = true;
         }
+    }
+
+    @Subscribe
+    public void onPrepared(PlayerPreparedEvent event) {
+        shareActionProvider.setShareIntent(SpotifyStreamerApp.getShareIntent());
     }
 
 }

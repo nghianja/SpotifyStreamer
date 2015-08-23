@@ -10,12 +10,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.Window;
 import android.widget.SearchView;
+import android.widget.ShareActionProvider;
 import android.widget.Toast;
 
 import com.squareup.otto.Subscribe;
 import com.udacity.nanodegree.nghianja.spotifystreamer.R;
 import com.udacity.nanodegree.nghianja.spotifystreamer.SpotifyStreamerApp;
 import com.udacity.nanodegree.nghianja.spotifystreamer.event.NowPlayingEvent;
+import com.udacity.nanodegree.nghianja.spotifystreamer.event.PlayerPreparedEvent;
 import com.udacity.nanodegree.nghianja.spotifystreamer.task.SearchArtistTask;
 
 /**
@@ -32,6 +34,7 @@ public class ArtistListActivity extends Activity {
     private static final String TAG = "ArtistListActivity";
     private MenuItem searchMenuItem;
     private Menu menu;
+    private ShareActionProvider shareActionProvider;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +51,7 @@ public class ArtistListActivity extends Activity {
 
     @Override
     protected void onDestroy() {
-            SpotifyStreamerApp.bus.unregister(this);
+        SpotifyStreamerApp.bus.unregister(this);
         super.onDestroy();
     }
 
@@ -94,6 +97,10 @@ public class ArtistListActivity extends Activity {
         // Assumes current activity is the searchable activity
         searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
 
+        MenuItem item = menu.findItem(R.id.share);
+        shareActionProvider = (ShareActionProvider) item.getActionProvider();
+        shareActionProvider.setShareIntent(SpotifyStreamerApp.getShareIntent());
+
         if (SpotifyStreamerApp.nowPlaying) {
             SpotifyStreamerApp.addNowPlaying(menu);
         }
@@ -104,22 +111,17 @@ public class ArtistListActivity extends Activity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        if (id == R.id.now_playing) {
-            SpotifyStreamerApp.showPlayer(this);
-            SpotifyStreamerApp.removeNowPlaying(menu);
-            SpotifyStreamerApp.nowPlaying = false;
-            return true;
-        } else if (id == R.id.action_settings) {
-            Intent intent = new Intent(this, SettingsActivity.class);
-            startActivity(intent);
-            return true;
+        switch (item.getItemId()) {
+            case R.id.now_playing:
+                SpotifyStreamerApp.showPlayer(this);
+                SpotifyStreamerApp.removeNowPlaying(menu);
+                SpotifyStreamerApp.nowPlaying = false;
+                return true;
+            case R.id.action_settings:
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
+                return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
 
@@ -130,6 +132,11 @@ public class ArtistListActivity extends Activity {
             SpotifyStreamerApp.addNowPlaying(menu);
             SpotifyStreamerApp.nowPlaying = true;
         }
+    }
+
+    @Subscribe
+    public void onPrepared(PlayerPreparedEvent event) {
+        shareActionProvider.setShareIntent(SpotifyStreamerApp.getShareIntent());
     }
 
 }

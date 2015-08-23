@@ -103,7 +103,7 @@ public class TrackListFragment extends ListFragment {
 
         if (savedInstanceState == null || !savedInstanceState.containsKey("tracks")) {
             tracks = new ArrayList<>();
-            TrackParcelable track = new TrackParcelable("Waiting to load top tracks...", "", "", null, null, null);
+            TrackParcelable track = new TrackParcelable("Waiting to load top tracks...", "", "", null, null, null, "");
             tracks.add(track);
         } else {
             tracks = savedInstanceState.getParcelableArrayList("tracks");
@@ -157,7 +157,7 @@ public class TrackListFragment extends ListFragment {
     }
 
     public void resetAdapter() {
-        TrackParcelable track = new TrackParcelable("Waiting to load top tracks...", "", "", null, null, null);
+        TrackParcelable track = new TrackParcelable("Waiting to load top tracks...", "", "", null, null, null, "");
         adapter.clear();
         adapter.add(track);
         adapter.notifyDataSetChanged();
@@ -195,9 +195,9 @@ public class TrackListFragment extends ListFragment {
                 if (small == null) {
                     small = base;
                 }
-                newTracks.add(new TrackParcelable(item.name, item.album.name, getArtist().getName(), large.url, small.url, item.preview_url));
+                newTracks.add(new TrackParcelable(item.name, item.album.name, getArtist().getName(), large.url, small.url, item.preview_url, item.uri));
             } else {
-                newTracks.add(new TrackParcelable(item.name, item.album.name, getArtist().getName(), null, null, item.preview_url));
+                newTracks.add(new TrackParcelable(item.name, item.album.name, getArtist().getName(), null, null, item.preview_url, item.uri));
             }
         }
         adapter.clear();

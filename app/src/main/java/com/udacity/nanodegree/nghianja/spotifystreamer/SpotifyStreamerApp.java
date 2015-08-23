@@ -50,6 +50,21 @@ public class SpotifyStreamerApp extends Application {
         return country;
     }
 
+    public static Intent getShareIntent() {
+        Intent shareIntent = new Intent();
+        shareIntent.setAction(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+
+        if (tracks == null) {
+            shareIntent.putExtra(Intent.EXTRA_TEXT, "");
+        } else {
+            TrackParcelable track = tracks.get(index);
+            shareIntent.putExtra(Intent.EXTRA_TEXT, track.getUri());
+        }
+
+        return shareIntent;
+    }
+
     public static void addNowPlaying(Menu menu) {
         if (menu != null) {
             MenuItem item = menu.add(Menu.NONE, R.id.now_playing, 10, R.string.now_playing);

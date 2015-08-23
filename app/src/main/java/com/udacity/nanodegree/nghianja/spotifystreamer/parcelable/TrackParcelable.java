@@ -18,15 +18,17 @@ public class TrackParcelable implements Parcelable {
     private String imageLarge;
     private String imageSmall;
     private String previewUrl;
+    private String uri;
 
     // Constructor
-    public TrackParcelable(String trackName, String albumName, String artistName, String imageLarge, String imageSmall, String previewUrl) {
+    public TrackParcelable(String trackName, String albumName, String artistName, String imageLarge, String imageSmall, String previewUrl, String uri) {
         this.trackName = trackName;
         this.albumName = albumName;
         this.artistName = artistName;
         this.imageLarge = imageLarge;
         this.imageSmall = imageSmall;
         this.previewUrl = previewUrl;
+        this.uri = uri;
     }
 
     // Getters and Setters
@@ -74,6 +76,14 @@ public class TrackParcelable implements Parcelable {
         this.previewUrl = previewUrl;
     }
 
+    public String getUri() {
+        return uri;
+    }
+
+    public void setUri(String uri) {
+        this.uri = uri;
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -83,17 +93,21 @@ public class TrackParcelable implements Parcelable {
     public void writeToParcel(Parcel out, int flags) {
         out.writeString(trackName);
         out.writeString(albumName);
+        out.writeString(artistName);
         out.writeString(imageLarge);
         out.writeString(imageSmall);
         out.writeString(previewUrl);
+        out.writeString(uri);
     }
 
     private TrackParcelable(Parcel in) {
         this.trackName = in.readString();
         this.albumName = in.readString();
+        this.artistName = in.readString();
         this.imageLarge = in.readString();
         this.imageSmall = in.readString();
         this.previewUrl = in.readString();
+        this.uri = in.readString();
     }
 
     public static final Parcelable.Creator<TrackParcelable> CREATOR
