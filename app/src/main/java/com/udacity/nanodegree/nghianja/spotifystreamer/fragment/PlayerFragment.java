@@ -114,10 +114,6 @@ public class PlayerFragment extends DialogFragment {
         args.putParcelableArrayList("tracks", tracks);
         f.setArguments(args);
 
-        // Set values to global variables.
-        SpotifyStreamerApp.index = index;
-        SpotifyStreamerApp.tracks = tracks;
-
         return f;
     }
 
@@ -300,9 +296,14 @@ public class PlayerFragment extends DialogFragment {
 
     public void preparePlayer() {
         try {
+            // Set values to global variables.
+            SpotifyStreamerApp.tracks = getTracks();
+            SpotifyStreamerApp.index = getShownIndex();
             service.preparePlayer(getTrack().getPreviewUrl());
         } catch (IOException e) {
             Log.e(TAG, e.toString());
+            SpotifyStreamerApp.tracks = null;
+            SpotifyStreamerApp.index = 0;
             Toast.makeText(getActivity(), getResources().getString(R.string.no_preview), Toast.LENGTH_SHORT).show();
         }
     }
