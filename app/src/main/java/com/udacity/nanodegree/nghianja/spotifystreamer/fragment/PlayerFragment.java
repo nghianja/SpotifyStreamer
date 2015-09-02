@@ -300,6 +300,7 @@ public class PlayerFragment extends DialogFragment {
             SpotifyStreamerApp.tracks = getTracks();
             SpotifyStreamerApp.index = getShownIndex();
             service.preparePlayer(getTrack().getPreviewUrl());
+            Log.d(TAG, getTrack().getImageSmall());
         } catch (IOException e) {
             Log.e(TAG, e.toString());
             SpotifyStreamerApp.tracks = null;

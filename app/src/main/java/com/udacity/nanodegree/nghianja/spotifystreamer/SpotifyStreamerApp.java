@@ -34,20 +34,21 @@ public class SpotifyStreamerApp extends Application {
     public static int index = 0;
     public static boolean nowPlaying = false;
 
-    public static boolean isNetworkAvailable(Activity activity) {
+    public static boolean isNetworkAvailable(Context context) {
         ConnectivityManager connectivityManager
-                = (ConnectivityManager) activity.getSystemService(Context.CONNECTIVITY_SERVICE);
+                = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
-    public static String getCountryCode(Activity activity) {
-        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(activity);
-        String country = sharedPref.getString(activity.getString(R.string.pref_key_country), "");
-        if (country.equals("")) {
-            country = activity.getResources().getConfiguration().locale.getCountry();
-        }
-        return country;
+    public static String getCountryCode(Context context) {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
+        return sharedPref.getString(context.getString(R.string.pref_key_country), context.getResources().getConfiguration().locale.getCountry());
+    }
+
+    public static boolean checkNotificationControls(Context context) {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
+        return sharedPref.getBoolean(context.getString(R.string.pref_key_notification), false);
     }
 
     public static Intent getShareIntent() {
@@ -97,6 +98,7 @@ public class SpotifyStreamerApp extends Application {
     public void onCreate() {
         super.onCreate();
         Intent intent = new Intent(this, PlayerService.class);
+        intent.setAction(SpotifyStreamerConstants.ACTION.START_ACTION);
         startService(intent);
     }
 
