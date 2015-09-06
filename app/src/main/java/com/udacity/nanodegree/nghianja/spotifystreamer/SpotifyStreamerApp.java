@@ -98,7 +98,6 @@ public class SpotifyStreamerApp extends Application {
     public void onCreate() {
         super.onCreate();
         Intent intent = new Intent(this, PlayerService.class);
-        intent.setAction(SpotifyStreamerConstants.ACTION.START_ACTION);
         startService(intent);
     }
 

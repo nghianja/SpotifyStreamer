@@ -11,6 +11,9 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.media.session.MediaController;
+import android.media.session.MediaSession;
+import android.media.session.MediaSessionManager;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
@@ -41,6 +44,7 @@ import java.io.IOException;
  * [5] http://www.truiton.com/2014/10/android-foreground-service-example/
  * [6] http://stackoverflow.com/questions/5528288/how-do-i-update-the-notification-text-for-a-foreground-service-in-android
  * [7] http://stackoverflow.com/questions/26888247/easiest-way-to-use-picasso-in-notification-icon
+ * [8] http://www.binpress.com/tutorial/using-android-media-style-notifications-with-media-session-controls/165
  */
 public class PlayerService extends Service {
 
@@ -52,6 +56,9 @@ public class PlayerService extends Service {
     private boolean isPrepared = false;
     private String dataSource;
     private MediaPlayer mediaPlayer;
+    private MediaSessionManager mediaSessionManager;
+    private MediaSession mediaSession;
+    private MediaController mediaController;
     private NotificationManager notificationManager;
     private Notification.Builder notificationBuilder;
 
@@ -87,20 +94,18 @@ public class PlayerService extends Service {
     }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent.getAction().equals(SpotifyStreamerConstants.ACTION.START_ACTION)) {
-            mediaPlayer.setOnPreparedListener(new PlayerPreparedListener());
-            mediaPlayer.setOnCompletionListener(new PlayerCompletionListener());
-            mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-            notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            setForeground();
-        }
-        return START_NOT_STICKY;
+    public IBinder onBind(Intent intent) {
+        return binder;
     }
 
     @Override
-    public IBinder onBind(Intent intent) {
-        return binder;
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if (mediaSessionManager == null) {
+            initMediaSessions();
+            createNotificationBuilder();
+            setForeground();
+        }
+        return START_NOT_STICKY;
     }
 
     @Override
@@ -159,39 +164,53 @@ public class PlayerService extends Service {
 
     public void setForeground() {
         if (SpotifyStreamerApp.checkNotificationControls(this)) {
-            Intent notificationIntent = new Intent(this, ArtistListActivity.class);
-            notificationIntent.setAction(SpotifyStreamerConstants.ACTION.MAIN_ACTION);
-            notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
-
-            Intent previousIntent = new Intent(this, PlayerService.class);
-            previousIntent.setAction(SpotifyStreamerConstants.ACTION.PREV_ACTION);
-            PendingIntent ppreviousIntent = PendingIntent.getService(this, 0, previousIntent, 0);
-
-            Intent playIntent = new Intent(this, PlayerService.class);
-            playIntent.setAction(SpotifyStreamerConstants.ACTION.PLAY_ACTION);
-            PendingIntent pplayIntent = PendingIntent.getService(this, 0, playIntent, 0);
-
-            Intent nextIntent = new Intent(this, PlayerService.class);
-            nextIntent.setAction(SpotifyStreamerConstants.ACTION.NEXT_ACTION);
-            PendingIntent pnextIntent = PendingIntent.getService(this, 0, nextIntent, 0);
-
-            Bitmap icon = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_spotifier);
-
-            notificationBuilder = new Notification.Builder(this)
-                    .setLargeIcon(Bitmap.createScaledBitmap(icon, 128, 128, false))
-                    .setSmallIcon(R.drawable.ic_music_note_white)
-                    .setContentIntent(pendingIntent)
-                    .setOngoing(true)
-                    .addAction(android.R.drawable.ic_media_previous, "Previous", ppreviousIntent)
-                    .addAction(android.R.drawable.ic_media_play, "Play", pplayIntent)
-                    .addAction(android.R.drawable.ic_media_next, "Next", pnextIntent);
-            updateNotificationBuilder();
-
             startForeground(SpotifyStreamerConstants.NOTIFICATION_ID.FOREGROUND_SERVICE, notificationBuilder.build());
         } else {
             stopForeground(true);
         }
+    }
+
+    private void initMediaSessions() {
+        mediaPlayer.setOnPreparedListener(new PlayerPreparedListener());
+        mediaPlayer.setOnCompletionListener(new PlayerCompletionListener());
+        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+
+        mediaSessionManager = (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
+//        mediaSession = new MediaSession(getApplicationContext(), "simple player session");
+//        mediaController = new MediaController(getApplicationContext(), mediaSession.getSessionToken());
+    }
+
+    private void createNotificationBuilder() {
+        notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        Intent notificationIntent = new Intent(this, ArtistListActivity.class);
+        notificationIntent.setAction(SpotifyStreamerConstants.ACTION.MAIN_ACTION);
+        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+
+        Intent previousIntent = new Intent(this, PlayerService.class);
+        previousIntent.setAction(SpotifyStreamerConstants.ACTION.PREV_ACTION);
+        PendingIntent ppreviousIntent = PendingIntent.getService(this, 0, previousIntent, 0);
+
+        Intent playIntent = new Intent(this, PlayerService.class);
+        playIntent.setAction(SpotifyStreamerConstants.ACTION.PLAY_ACTION);
+        PendingIntent pplayIntent = PendingIntent.getService(this, 0, playIntent, 0);
+
+        Intent nextIntent = new Intent(this, PlayerService.class);
+        nextIntent.setAction(SpotifyStreamerConstants.ACTION.NEXT_ACTION);
+        PendingIntent pnextIntent = PendingIntent.getService(this, 0, nextIntent, 0);
+
+        Bitmap icon = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_spotifier);
+
+        notificationBuilder = new Notification.Builder(this)
+                .setLargeIcon(Bitmap.createScaledBitmap(icon, 128, 128, false))
+                .setSmallIcon(R.drawable.ic_music_note_white)
+                .setContentIntent(pendingIntent)
+                .setOngoing(true)
+                .addAction(android.R.drawable.ic_media_previous, "Previous", ppreviousIntent)
+                .addAction(android.R.drawable.ic_media_play, "Play", pplayIntent)
+                .addAction(android.R.drawable.ic_media_next, "Next", pnextIntent);
+        updateNotificationBuilder();
     }
 
     private void updateNotificationBuilder() {
