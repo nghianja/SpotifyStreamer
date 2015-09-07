@@ -11,9 +11,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.media.session.MediaController;
-import android.media.session.MediaSession;
-import android.media.session.MediaSessionManager;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
@@ -26,6 +23,7 @@ import com.udacity.nanodegree.nghianja.spotifystreamer.SpotifyStreamerApp;
 import com.udacity.nanodegree.nghianja.spotifystreamer.SpotifyStreamerConstants;
 import com.udacity.nanodegree.nghianja.spotifystreamer.activity.ArtistListActivity;
 import com.udacity.nanodegree.nghianja.spotifystreamer.event.ChangeSettingsEvent;
+import com.udacity.nanodegree.nghianja.spotifystreamer.event.PlayerCompletionEvent;
 import com.udacity.nanodegree.nghianja.spotifystreamer.event.PlayerPreparedEvent;
 import com.udacity.nanodegree.nghianja.spotifystreamer.listener.PlayerCompletionListener;
 import com.udacity.nanodegree.nghianja.spotifystreamer.listener.PlayerPreparedListener;
@@ -56,9 +54,9 @@ public class PlayerService extends Service {
     private boolean isPrepared = false;
     private String dataSource;
     private MediaPlayer mediaPlayer;
-    private MediaSessionManager mediaSessionManager;
-    private MediaSession mediaSession;
-    private MediaController mediaController;
+//    private MediaSessionManager mediaSessionManager;
+//    private MediaSession mediaSession;
+//    private MediaController mediaController;
     private NotificationManager notificationManager;
     private Notification.Builder notificationBuilder;
 
@@ -100,11 +98,14 @@ public class PlayerService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (mediaSessionManager == null) {
+        if (notificationManager == null) {
+            notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
             initMediaSessions();
-            createNotificationBuilder();
+            createNotificationBuilder(android.R.drawable.ic_media_play, "Play", SpotifyStreamerConstants.ACTION.PLAY_ACTION);
             setForeground();
         }
+        handleIntent(intent);
         return START_NOT_STICKY;
     }
 
@@ -122,10 +123,16 @@ public class PlayerService extends Service {
 
     @Subscribe
     public void onPrepared(PlayerPreparedEvent event) {
-        updateNotificationBuilder();
-        notificationManager.notify(SpotifyStreamerConstants.NOTIFICATION_ID.FOREGROUND_SERVICE, notificationBuilder.build());
         isPrepared = true;
         mediaPlayer.start();
+        createNotificationBuilder(android.R.drawable.ic_media_pause, "Pause", SpotifyStreamerConstants.ACTION.PAUSE_ACTION);
+        notificationManager.notify(SpotifyStreamerConstants.NOTIFICATION_ID.FOREGROUND_SERVICE, notificationBuilder.build());
+    }
+
+    @Subscribe
+    public void onCompletion(PlayerCompletionEvent event) {
+        createNotificationBuilder(android.R.drawable.ic_media_play, "Play", SpotifyStreamerConstants.ACTION.PLAY_ACTION);
+        notificationManager.notify(SpotifyStreamerConstants.NOTIFICATION_ID.FOREGROUND_SERVICE, notificationBuilder.build());
     }
 
     @Subscribe
@@ -175,41 +182,27 @@ public class PlayerService extends Service {
         mediaPlayer.setOnCompletionListener(new PlayerCompletionListener());
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
 
-        mediaSessionManager = (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
+//        mediaSessionManager = (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
 //        mediaSession = new MediaSession(getApplicationContext(), "simple player session");
 //        mediaController = new MediaController(getApplicationContext(), mediaSession.getSessionToken());
     }
 
-    private void createNotificationBuilder() {
-        notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
+    private void createNotificationBuilder(int icon, String title, String intentAction) {
         Intent notificationIntent = new Intent(this, ArtistListActivity.class);
         notificationIntent.setAction(SpotifyStreamerConstants.ACTION.MAIN_ACTION);
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
 
-        Intent previousIntent = new Intent(this, PlayerService.class);
-        previousIntent.setAction(SpotifyStreamerConstants.ACTION.PREV_ACTION);
-        PendingIntent ppreviousIntent = PendingIntent.getService(this, 0, previousIntent, 0);
-
-        Intent playIntent = new Intent(this, PlayerService.class);
-        playIntent.setAction(SpotifyStreamerConstants.ACTION.PLAY_ACTION);
-        PendingIntent pplayIntent = PendingIntent.getService(this, 0, playIntent, 0);
-
-        Intent nextIntent = new Intent(this, PlayerService.class);
-        nextIntent.setAction(SpotifyStreamerConstants.ACTION.NEXT_ACTION);
-        PendingIntent pnextIntent = PendingIntent.getService(this, 0, nextIntent, 0);
-
-        Bitmap icon = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_spotifier);
+        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_spotifier);
 
         notificationBuilder = new Notification.Builder(this)
-                .setLargeIcon(Bitmap.createScaledBitmap(icon, 128, 128, false))
+                .setLargeIcon(Bitmap.createScaledBitmap(bitmap, 128, 128, false))
                 .setSmallIcon(R.drawable.ic_music_note_white)
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)
-                .addAction(android.R.drawable.ic_media_previous, "Previous", ppreviousIntent)
-                .addAction(android.R.drawable.ic_media_play, "Play", pplayIntent)
-                .addAction(android.R.drawable.ic_media_next, "Next", pnextIntent);
+                .addAction(android.R.drawable.ic_media_previous, "Previous", getPendingIntent(SpotifyStreamerConstants.ACTION.PREV_ACTION))
+                .addAction(icon, title, getPendingIntent(intentAction))
+                .addAction(android.R.drawable.ic_media_next, "Next", getPendingIntent(SpotifyStreamerConstants.ACTION.NEXT_ACTION));
         updateNotificationBuilder();
     }
 
@@ -233,9 +226,62 @@ public class PlayerService extends Service {
                 .setContentText(artistName);
     }
 
+    private PendingIntent getPendingIntent(String intentAction) {
+        Intent intent = new Intent(this, PlayerService.class);
+        intent.setAction(intentAction);
+        return PendingIntent.getService(this, 0, intent, 0);
+    }
+
     private void setLargeIcon(Bitmap icon) {
         notificationBuilder.setLargeIcon(icon);
         notificationManager.notify(SpotifyStreamerConstants.NOTIFICATION_ID.FOREGROUND_SERVICE, notificationBuilder.build());
+    }
+
+    private void handleIntent(Intent intent) {
+        if (intent == null || intent.getAction() == null || SpotifyStreamerApp.tracks == null)
+            return;
+
+        String action = intent.getAction();
+
+        if (action.equals(SpotifyStreamerConstants.ACTION.PREV_ACTION)) {
+            if (SpotifyStreamerApp.index > 0) {
+                SpotifyStreamerApp.index = SpotifyStreamerApp.index - 1;
+            } else {
+                SpotifyStreamerApp.index = SpotifyStreamerApp.tracks.size() - 1;
+            }
+            try {
+                preparePlayer(SpotifyStreamerApp.tracks.get(SpotifyStreamerApp.index).getPreviewUrl());
+            } catch (IOException e) {
+                Log.e(TAG, e.toString());
+                SpotifyStreamerApp.tracks = null;
+                SpotifyStreamerApp.index = 0;
+            }
+        } else if (action.equals(SpotifyStreamerConstants.ACTION.PAUSE_ACTION)) {
+            if (isPrepared && mediaPlayer.isPlaying()) {
+                mediaPlayer.pause();
+                createNotificationBuilder(android.R.drawable.ic_media_play, "Play", SpotifyStreamerConstants.ACTION.PLAY_ACTION);
+                notificationManager.notify(SpotifyStreamerConstants.NOTIFICATION_ID.FOREGROUND_SERVICE, notificationBuilder.build());
+            }
+        } else if (action.equals(SpotifyStreamerConstants.ACTION.PLAY_ACTION)) {
+            if (isPrepared) {
+                mediaPlayer.start();
+                createNotificationBuilder(android.R.drawable.ic_media_pause, "Pause", SpotifyStreamerConstants.ACTION.PAUSE_ACTION);
+                notificationManager.notify(SpotifyStreamerConstants.NOTIFICATION_ID.FOREGROUND_SERVICE, notificationBuilder.build());
+            }
+        } else if (action.equals(SpotifyStreamerConstants.ACTION.NEXT_ACTION)) {
+            if (SpotifyStreamerApp.index < SpotifyStreamerApp.tracks.size() - 1) {
+                SpotifyStreamerApp.index = SpotifyStreamerApp.index + 1;
+            } else {
+                SpotifyStreamerApp.index = 0;
+            }
+            try {
+                preparePlayer(SpotifyStreamerApp.tracks.get(SpotifyStreamerApp.index).getPreviewUrl());
+            } catch (IOException e) {
+                Log.e(TAG, e.toString());
+                SpotifyStreamerApp.tracks = null;
+                SpotifyStreamerApp.index = 0;
+            }
+        }
     }
 
 }
