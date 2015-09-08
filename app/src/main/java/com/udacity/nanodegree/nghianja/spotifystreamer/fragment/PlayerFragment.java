@@ -317,6 +317,11 @@ public class PlayerFragment extends DialogFragment {
 
     @Subscribe
     public void onPrepared(PlayerPreparedEvent event) {
+        if (SpotifyStreamerApp.index != getShownIndex()) {
+            getArguments().putInt("index", SpotifyStreamerApp.index);
+            seekHandler.removeCallbacks(runnable);
+            initViews();
+        }
         updateViews(event.getDuration(), event.getEndText());
         updateSeekBar();
     }
