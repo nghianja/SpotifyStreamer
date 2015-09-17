@@ -43,7 +43,10 @@ public class SpotifyStreamerApp extends Application {
 
     public static String getCountryCode(Context context) {
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
-        return sharedPref.getString(context.getString(R.string.pref_key_country), context.getResources().getConfiguration().locale.getCountry());
+        String locale = sharedPref.getString(context.getString(R.string.pref_key_country), "");
+        if (locale.equals(""))
+            locale = context.getResources().getConfiguration().locale.getCountry();
+        return locale;
     }
 
     public static boolean checkNotificationControls(Context context) {
